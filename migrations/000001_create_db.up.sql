@@ -71,7 +71,7 @@ CREATE TRIGGER update_accrual_updated_at
     EXECUTE FUNCTION update_updated_at_column();
 
 -- withdraw table
-CREATE TABLE withdraw (
+CREATE TABLE withdrawal (
     id UUID PRIMARY KEY DEFAULT uuid_generate_v4(),
     order_id UUID UNIQUE REFERENCES order (id) ON UPDATE CASCADE ON DELETE CASCADE,
     value BIGINT NOT NULL CHECK (value >= 0) DEFAULT 0,
@@ -80,7 +80,7 @@ CREATE TABLE withdraw (
     updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
 );
 
-CREATE TRIGGER update_withdraw_updated_at
-    BEFORE UPDATE ON withdraw
+CREATE TRIGGER update_withdrawal_updated_at
+    BEFORE UPDATE ON withdrawal
     FOR EACH ROW
     EXECUTE FUNCTION update_updated_at_column();
