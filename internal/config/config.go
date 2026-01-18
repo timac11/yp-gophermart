@@ -41,7 +41,7 @@ func initEnv() *Config {
 func initFlags() *Config {
 	flagValues := Config{}
 
-	pflag.StringVarP(&flagValues.Address, "addr", "a", "http://localhost:8080", "Address host:port")
+	pflag.StringVarP(&flagValues.Address, "addr", "a", "localhost:8080", "Address host:port")
 	pflag.StringVarP(&flagValues.DatabaseUri, "dbaddr", "d", "postgresql://localhost/postgres", "PG URI")
 	pflag.StringVarP(&flagValues.AccrualSystemAddress, "accuraladdr", "r", "http://localhost:3000", "Accural system host:port")
 
