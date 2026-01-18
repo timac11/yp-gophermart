@@ -1,3 +1,3 @@
 package handler
 
-type ApplicationContainer struct {}
+type ApplicationContainer struct{}

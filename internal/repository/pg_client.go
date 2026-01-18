@@ -38,7 +38,7 @@ func (client *PgClient) applyMigration(ctx context.Context) error {
 	driver, err := postgres.WithInstance(sqlDb, &postgres.Config{})
 
 	defer sqlDb.Close()
-	
+
 	if err != nil {
 		return err
 	}
@@ -54,7 +54,7 @@ func (client *PgClient) applyMigration(ctx context.Context) error {
 	}
 
 	err = migrations.Up()
-	
+
 	if err != nil && err != migrate.ErrNoChange {
 		return err
 	}

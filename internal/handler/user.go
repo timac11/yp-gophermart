@@ -1,8 +1,8 @@
 package handler
 
 import (
-	"net/http"
 	"encoding/json"
+	"net/http"
 
 	"github.com/timac11/yp-gophermart/internal/model"
 )
