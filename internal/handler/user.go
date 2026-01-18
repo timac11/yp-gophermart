@@ -7,28 +7,28 @@ import (
 	"github.com/timac11/yp-gophermart/internal/model"
 )
 
-func Login(w http.ResponseWriter, r *http.Request) error {
-	_, err := parseUserFromBody(r)
+func (app *Application) Login(w http.ResponseWriter, r *http.Request) {
+	_, err := app.parseUserFromBody(r)
 
 	if err != nil {
-		return err
+		w.WriteHeader(http.StatusBadGateway)
+		return
 	}
 
-	return nil
 }
 
-func Register(w http.ResponseWriter, r *http.Request) error {
-	_, err := parseUserFromBody(r)
+func (app *Application) Register(w http.ResponseWriter, r *http.Request) {
+	_, err := app.parseUserFromBody(r)
 
 	if err != nil {
-		return err
+		w.WriteHeader(http.StatusBadGateway)
+		return
 	}
 
-	return nil
 }
 
-func parseUserFromBody(req *http.Request) (*model.User, error) {
-	var user model.User
+func (app *Application) parseUserFromBody(req *http.Request) (*model.UserDto, error) {
+	var user model.UserDto
 
 	err := json.NewDecoder(req.Body).Decode(&user)
 

@@ -10,7 +10,9 @@ type Config struct {
 	DatabaseUri          string `env:"DATABASE_URI"`
 	AccrualSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS"`
 	JWTSecret            string `env:"JWT_SECRET"`
-	JWTExpMinutes        int64  `env:"JWT_EXP_MINUTES"`
+	JWTExpMinutes        uint   `env:"JWT_EXP_MINUTES"`
+	RetryAttempts        uint
+	RetryInterval        uint
 }
 
 func InitConfig() *Config {
@@ -37,6 +39,14 @@ func InitConfig() *Config {
 		envValues.JWTExpMinutes = flagValues.JWTExpMinutes
 	}
 
+	if envValues.RetryAttempts == 0 {
+		envValues.RetryAttempts = flagValues.RetryAttempts
+	}
+
+	if envValues.RetryInterval == 0 {
+		envValues.RetryInterval = flagValues.RetryInterval
+	}
+
 	return envValues
 }
 
@@ -55,7 +65,9 @@ func initFlags() *Config {
 	pflag.StringVarP(&flagValues.DatabaseUri, "dbaddr", "d", "postgresql://localhost/postgres", "PG URI")
 	pflag.StringVarP(&flagValues.AccrualSystemAddress, "accrualaddr", "r", "http://localhost:3000", "Accrual system host:port")
 	pflag.StringVarP(&flagValues.JWTSecret, "jwtsec", "j", "DEFAULT_SECRET", "JWT Secret") // it is not right, remove default arg
-	pflag.Int64VarP(&flagValues.JWTExpMinutes, "jwtexp", "s", 180, "JWT lifetime in minutes")
+	pflag.UintVarP(&flagValues.JWTExpMinutes, "jwtexp", "s", 180, "JWT lifetime in minutes")
+	pflag.UintVar(&flagValues.RetryAttempts, "retryAttempt", 3, "Count of retry attempts to execute metrics operation")
+	pflag.UintVar(&flagValues.RetryInterval, "retryInterval", 2, "Interval in seconds between metric operation attempts")
 
 	pflag.Parse()
 

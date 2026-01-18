@@ -9,6 +9,7 @@ import (
 	"github.com/timac11/yp-gophermart/internal/config"
 	"github.com/timac11/yp-gophermart/internal/handler/middleware"
 	"github.com/timac11/yp-gophermart/internal/repository"
+	"github.com/timac11/yp-gophermart/internal/service"
 )
 
 func InitRouter(conf *config.Config) (*chi.Mux, error) {
@@ -18,11 +19,18 @@ func InitRouter(conf *config.Config) (*chi.Mux, error) {
 	if err != nil {
 		return nil, err
 	}
+	// init application
+	repo, err := repository.NewPgClient(conf.DatabaseUri)
+	if err != nil {
+		return nil, err
+	}
 
-	mParams := middleware.Params{Secret: conf.JWTSecret, TokenExp: (time.Duration(conf.JWTExpMinutes * int64(time.Minute)))}
-	m := middleware.NewMiddleware(mParams)
+	application := NewApplication(repo, service.ServiceConfig{Attempts: conf.RetryAttempts, AttemptsInterval: conf.RetryInterval})
 
 	// setup middlewares
+	mParams := middleware.Params{Secret: conf.JWTSecret, TokenExp: (time.Duration(conf.JWTExpMinutes * uint(time.Minute)))}
+	m := middleware.NewMiddleware(mParams)
+
 	middlewares := []func(http.Handler) http.Handler{
 		m.LoggingMiddleware,
 		m.GzipMiddleware,
@@ -49,8 +57,8 @@ func InitRouter(conf *config.Config) (*chi.Mux, error) {
 			}
 			router.Use(middlewares...)
 
-			router.Post("/register", func(w http.ResponseWriter, r *http.Request) {})
-			router.Post("/login", func(w http.ResponseWriter, r *http.Request) {})
+			router.Post("/register", application.Register)
+			router.Post("/login", application.Login)
 		})
 	})
 
