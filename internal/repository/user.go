@@ -2,11 +2,17 @@ package repository
 
 import (
 	"context"
+	internalErrors "errors"
 
+	"github.com/jackc/pgerrcode"
+	"github.com/jackc/pgx/v5"
+	"github.com/jackc/pgx/v5/pgconn"
+
+	"github.com/timac11/yp-gophermart/internal/errors"
 	"github.com/timac11/yp-gophermart/internal/model"
 )
 
-func (client *PgClient) SaveUser(ctx context.Context, user model.UserDto) (*model.User, error) {
+func (client *PgClient) SaveUser(ctx context.Context, user *model.UserDto) (*model.User, error) {
 	statement := `
 		INSERT INTO "user" (login, password)
 		VALUES ($1, $2)
@@ -18,6 +24,9 @@ func (client *PgClient) SaveUser(ctx context.Context, user model.UserDto) (*mode
 	)
 
 	if err != nil {
+		if pgErr, ok := err.(*pgconn.PgError); ok && pgerrcode.IsIntegrityConstraintViolation(pgErr.Code) {
+			return nil, errors.NewEntityError(err, errors.EntityAlreadyExists, user)
+		}
 		return nil, err
 	}
 
@@ -35,6 +44,9 @@ func (client *PgClient) GetUserByLogin(ctx context.Context, login string) (*mode
 	err := client.pool.QueryRow(ctx, statement, login).Scan(&user.Id, &user.Login, &user.Password)
 
 	if err != nil {
+		if internalErrors.Is(err, pgx.ErrNoRows) {
+			return nil, errors.NewEntityError(err, errors.EntityNotFound, login)
+		}
 		return nil, err
 	}
 

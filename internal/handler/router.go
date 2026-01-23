@@ -6,6 +6,7 @@ import (
 
 	"github.com/go-chi/chi/v5"
 
+	"github.com/timac11/yp-gophermart/internal/auth"
 	"github.com/timac11/yp-gophermart/internal/config"
 	"github.com/timac11/yp-gophermart/internal/handler/middleware"
 	"github.com/timac11/yp-gophermart/internal/repository"
@@ -25,10 +26,12 @@ func InitRouter(conf *config.Config) (*chi.Mux, error) {
 		return nil, err
 	}
 
-	application := NewApplication(repo, service.ServiceConfig{Attempts: conf.RetryAttempts, AttemptsInterval: conf.RetryInterval})
+	jwtControl := auth.JWTControl{TokenExp: (time.Duration(conf.JWTExpMinutes * uint(time.Minute))), Secret: conf.JWTSecret}
+
+	application := NewApplication(repo, &jwtControl, &service.ServiceConfig{Attempts: conf.RetryAttempts, AttemptsInterval: conf.RetryInterval})
 
 	// setup middlewares
-	mParams := middleware.Params{Secret: conf.JWTSecret, TokenExp: (time.Duration(conf.JWTExpMinutes * uint(time.Minute)))}
+	mParams := middleware.Params{JwtControl: &jwtControl}
 	m := middleware.NewMiddleware(mParams)
 
 	middlewares := []func(http.Handler) http.Handler{

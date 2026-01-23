@@ -9,10 +9,10 @@ import (
 func (m *Middleware) AuthCheckMiddleware(next http.Handler) http.Handler {
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
 		token := r.Header.Get("Authorization")
-		payload, error := m.authControl.GetSignedPayload(token)
+		payload, error := m.jwtControl.GetSignedPayload(token)
 
 		if error != nil {
-			// todo: return 401 status
+			http.Error(w, "User unauthorized", http.StatusUnauthorized)
 			return
 		}
 

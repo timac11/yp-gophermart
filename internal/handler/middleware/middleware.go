@@ -1,24 +1,20 @@
 package middleware
 
 import (
-	"time"
-
 	"github.com/timac11/yp-gophermart/internal/auth"
 )
 
 type Params struct {
-	TokenExp time.Duration
-	Secret   string
+	JwtControl *auth.JWTControl
 }
 
 type Middleware struct {
-	authControl auth.JWTControl
+	jwtControl *auth.JWTControl
 }
 
 func NewMiddleware(params Params) *Middleware {
-	control := auth.JWTControl{TokenExp: params.TokenExp, Secret: params.Secret}
 	mw := Middleware{
-		authControl: control,
+		jwtControl: params.JwtControl,
 	}
 	return &mw
 }
