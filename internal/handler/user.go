@@ -49,8 +49,8 @@ func (app *Application) Register(w http.ResponseWriter, r *http.Request) {
 
 }
 
-func (app *Application) parseUserFromBody(req *http.Request) (*model.UserDto, error) {
-	var user model.UserDto
+func (app *Application) parseUserFromBody(req *http.Request) (*model.UserLoginDto, error) {
+	var user model.UserLoginDto
 
 	err := json.NewDecoder(req.Body).Decode(&user)
 

@@ -12,7 +12,7 @@ import (
 	"github.com/timac11/yp-gophermart/internal/model"
 )
 
-func (client *PgClient) SaveUser(ctx context.Context, user *model.UserDto) (*model.User, error) {
+func (client *PgClient) SaveUser(ctx context.Context, user *model.UserLoginDto) (*model.User, error) {
 	statement := `
 		INSERT INTO "user" (login, password)
 		VALUES ($1, $2)

@@ -7,18 +7,22 @@ import (
 
 type Repository interface {
 	service.UserRepository
+	service.OrderRepository
 }
 
 type Application struct {
-	userService *service.UserService
-	jwtControl  *auth.JWTControl
+	userService  *service.UserService
+	orderService *service.OrderService
+	jwtControl   *auth.JWTControl
 }
 
 func NewApplication(repository Repository, jwtControl *auth.JWTControl, config *service.ServiceConfig) *Application {
 	userService := service.NewUserService(repository, config)
+	orderService := service.NewOrderService(repository, config)
 
 	return &Application{
-		userService: userService,
-		jwtControl:  jwtControl,
+		userService:  userService,
+		orderService: orderService,
+		jwtControl:   jwtControl,
 	}
 }

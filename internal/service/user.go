@@ -8,23 +8,18 @@ import (
 	"github.com/timac11/yp-gophermart/internal/model"
 )
 
-type ServiceConfig struct {
-	Attempts         uint
-	AttemptsInterval uint
-}
-
 type UserService struct {
 	repository UserRepository
 	config     *ServiceConfig
 }
 
 type UserRepository interface {
-	SaveUser(ctx context.Context, value *model.UserDto) (*model.User, error)
+	SaveUser(ctx context.Context, value *model.UserLoginDto) (*model.User, error)
 	GetUserById(ctx context.Context, id string) (*model.User, error)
 	GetUserByLogin(ctx context.Context, login string) (*model.User, error)
 }
 
-func (service *UserService) Register(ctx context.Context, value *model.UserDto) (*model.User, error) {
+func (service *UserService) Register(ctx context.Context, value *model.UserLoginDto) (*model.User, error) {
 
 	password, err := util.HashPassword(value.Password)
 
@@ -32,7 +27,7 @@ func (service *UserService) Register(ctx context.Context, value *model.UserDto) 
 		return nil, err
 	}
 
-	userModel, err := service.repository.SaveUser(ctx, &model.UserDto{Login: value.Login, Password: password})
+	userModel, err := service.repository.SaveUser(ctx, &model.UserLoginDto{Login: value.Login, Password: password})
 
 	if err != nil {
 		return nil, err
@@ -42,7 +37,7 @@ func (service *UserService) Register(ctx context.Context, value *model.UserDto) 
 
 }
 
-func (service *UserService) Login(ctx context.Context, value *model.UserDto) (*model.User, error) {
+func (service *UserService) Login(ctx context.Context, value *model.UserLoginDto) (*model.User, error) {
 	userModel, err := service.repository.GetUserByLogin(ctx, value.Login)
 
 	if err != nil {

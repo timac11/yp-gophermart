@@ -6,7 +6,7 @@ type User struct {
 	Password string
 }
 
-type UserDto struct {
+type UserLoginDto struct {
 	Login    string `json:"login"`
 	Password string `json:"password"`
 }

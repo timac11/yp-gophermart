@@ -47,8 +47,8 @@ func InitRouter(conf *config.Config) (*chi.Mux, error) {
 			}
 			router.Use(middlewares...)
 
-			router.Post("/orders", func(w http.ResponseWriter, r *http.Request) {})
-			router.Get("/orders", func(w http.ResponseWriter, r *http.Request) {})
+			router.Post("/orders", application.CreateOrder)
+			router.Get("/orders", application.GetOrders)
 			router.Get("/balance", func(w http.ResponseWriter, r *http.Request) {})
 			router.Post("/balance/withdraw", func(w http.ResponseWriter, r *http.Request) {})
 			router.Get("/withdraws", func(w http.ResponseWriter, r *http.Request) {})
