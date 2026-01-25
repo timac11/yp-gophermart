@@ -12,16 +12,16 @@ type OrderService struct {
 }
 
 type OrderRepository interface {
-	CreateOrder(ctx context.Context, value string) (*model.Order, error)
-	GetOrders(ctx context.Context) (*[]model.Order, error)
+	CreateOrder(ctx context.Context, value string) (*model.OrderModel, error)
+	GetOrders(ctx context.Context) ([]*model.OrderInfo, error)
 }
 
-func (service *OrderService) CreateOrder(ctx context.Context, value string) (*model.Order, error) {
-	return service.CreateOrder(ctx, value)
+func (service *OrderService) CreateOrder(ctx context.Context, value string) (*model.OrderModel, error) {
+	return service.repository.CreateOrder(ctx, value)
 }
 
-func (service *OrderService) GetOrders(ctx context.Context) (*[]model.Order, error) {
-	return service.GetOrders(ctx)
+func (service *OrderService) GetOrders(ctx context.Context) ([]*model.OrderInfo, error) {
+	return service.repository.GetOrders(ctx)
 }
 
 func NewOrderService(repository OrderRepository, config *ServiceConfig) *OrderService {

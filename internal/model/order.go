@@ -9,9 +9,17 @@ const (
 	Processed  OrderStatus = "PROCESSED"
 )
 
-type Order struct {
-	Number     string  `json:"number"`
-	Status     string  `json:"status"`
-	Accrual    float64 `json:"accrual,omitempty"`
-	UploadedAt string  `json:"uploaded_at"`
+type OrderModel struct {
+	Id        string
+	OrderNum  string
+	UserId    string
+	CreatedAt string
+	UpdatedAt string
+}
+
+type OrderInfo struct {
+	Number     string   `json:"number"`
+	Status     string   `json:"status"`
+	Accrual    *float64 `json:"accrual,omitempty"`
+	UploadedAt string   `json:"uploaded_at"`
 }

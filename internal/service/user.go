@@ -14,7 +14,7 @@ type UserService struct {
 }
 
 type UserRepository interface {
-	SaveUser(ctx context.Context, value *model.UserLoginDto) (*model.User, error)
+	CreateUser(ctx context.Context, value *model.UserLoginDto) (*model.User, error)
 	GetUserById(ctx context.Context, id string) (*model.User, error)
 	GetUserByLogin(ctx context.Context, login string) (*model.User, error)
 }
@@ -27,7 +27,7 @@ func (service *UserService) Register(ctx context.Context, value *model.UserLogin
 		return nil, err
 	}
 
-	userModel, err := service.repository.SaveUser(ctx, &model.UserLoginDto{Login: value.Login, Password: password})
+	userModel, err := service.repository.CreateUser(ctx, &model.UserLoginDto{Login: value.Login, Password: password})
 
 	if err != nil {
 		return nil, err
