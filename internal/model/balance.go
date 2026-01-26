@@ -1,5 +1,13 @@
 package model
 
+type Balance struct {
+	Id        string
+	Value     int64
+	UserId    int64
+	CreatedAt string
+	UpdatedAt string
+}
+
 type BalanceInfo struct {
 	Current   float64 `json:"current"`
 	Withdrawn float64 `json:"withdrawn"`

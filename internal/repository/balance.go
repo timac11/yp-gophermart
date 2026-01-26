@@ -9,10 +9,15 @@ import (
 )
 
 const (
+	createBalanceQuery = `
+		INSERT INTO "balance" (value, user_id)
+		VALUES ($1, $2)
+		RETURNING id, user_id, order_num, created_at;
+	`
 	getBalanceQuery = `
 		SELECT value, used_value
 		FROM "balance"
-		WHERE user_id=$1 ;
+		WHERE user_id=$1;
 	`
 	getWithdrawalsListQuery = `
 		SELECT order_num, value, created_at

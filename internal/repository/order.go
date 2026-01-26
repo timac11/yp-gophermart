@@ -12,7 +12,7 @@ const (
 	createOrderQuery = `
 		INSERT INTO "order" (order_num, user_id)
 		VALUES ($1, $2)
-		RETURNING user_id, order_num, created_at
+		RETURNING id, user_id, order_num, created_at;
 	`
 	getOrdersQuery = `
 		SELECT order_num, status, accrual, created_at

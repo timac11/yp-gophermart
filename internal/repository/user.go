@@ -16,7 +16,7 @@ const (
 	createUserQuery = `
 		INSERT INTO "user" (login, password)
 		VALUES ($1, $2)
-		RETURNING id, login, password'
+		RETURNING id, login, password;
 	`
 	getUserByLoginQuery = `
 		SELECT id, login, password from "user"
@@ -30,7 +30,15 @@ const (
 
 func (client *PgClient) CreateUser(ctx context.Context, user *model.UserLoginDto) (*model.User, error) {
 	var userModel model.User
-	err := client.pool.QueryRow(ctx, createUserQuery, user.Login, user.Password).Scan(
+
+	tx, err := client.pool.BeginTx(ctx, pgx.TxOptions{})
+	defer func() {
+		if err != nil {
+			tx.Rollback(ctx)
+		}
+	}()
+
+	err = tx.QueryRow(ctx, createUserQuery, user.Login, user.Password).Scan(
 		&userModel.Id, &userModel.Login, &userModel.Password,
 	)
 
@@ -38,6 +46,16 @@ func (client *PgClient) CreateUser(ctx context.Context, user *model.UserLoginDto
 		if pgErr, ok := err.(*pgconn.PgError); ok && pgerrcode.IsIntegrityConstraintViolation(pgErr.Code) {
 			return nil, errors.NewEntityError(err, errors.EntityAlreadyExists, user)
 		}
+		return nil, err
+	}
+
+	_, err = tx.Exec(ctx, createBalanceQuery, 0, userModel.Id)
+	if err != nil {
+		return nil, err
+	}
+
+	err = tx.Commit(ctx)
+	if err != nil {
 		return nil, err
 	}
 
