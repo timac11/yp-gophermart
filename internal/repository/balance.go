@@ -12,7 +12,7 @@ const (
 	createBalanceQuery = `
 		INSERT INTO "balance" (value, user_id)
 		VALUES ($1, $2)
-		RETURNING id, user_id, order_num, created_at;
+		RETURNING id, user_id, created_at;
 	`
 	getBalanceQuery = `
 		SELECT value, used_value

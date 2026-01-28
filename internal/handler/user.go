@@ -24,14 +24,14 @@ func (app *Application) Login(w http.ResponseWriter, r *http.Request) {
 
 	if err != nil {
 		code := handleError(err)
-		w.WriteHeader(code)
+		http.Error(w, err.Error(), code)
 		return
 	}
 
 	signedString, err := app.jwtControl.BuildJWTString(auth.JWTPayload{UserID: loginUser.Id})
 
 	if err != nil {
-		w.WriteHeader(http.StatusInternalServerError)
+		http.Error(w, err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -40,13 +40,31 @@ func (app *Application) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *Application) Register(w http.ResponseWriter, r *http.Request) {
-	_, err := app.parseUserFromBody(r)
+	user, err := app.parseUserFromBody(r)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadGateway)
 		return
 	}
 
+	ctx := r.Context()
+	registeredUser, err := app.userService.Register(ctx, user)
+
+	if err != nil {
+		code := handleError(err)
+		http.Error(w, err.Error(), code)
+		return
+	}
+
+	signedString, err := app.jwtControl.BuildJWTString(auth.JWTPayload{UserID: registeredUser.Id})
+
+	if err != nil {
+		http.Error(w, err.Error(), http.StatusInternalServerError)
+		return
+	}
+
+	w.WriteHeader(http.StatusOK)
+	w.Header().Set("Authorization", signedString)
 }
 
 func (app *Application) parseUserFromBody(req *http.Request) (*model.UserLoginDto, error) {
