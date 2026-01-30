@@ -14,7 +14,7 @@ func (app *Application) Login(w http.ResponseWriter, r *http.Request) {
 	user, err := app.parseUserFromBody(r)
 
 	if err != nil {
-		w.WriteHeader(http.StatusBadGateway)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
@@ -35,15 +35,15 @@ func (app *Application) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Authorization", signedString)
+	w.WriteHeader(http.StatusOK)
 }
 
 func (app *Application) Register(w http.ResponseWriter, r *http.Request) {
 	user, err := app.parseUserFromBody(r)
 
 	if err != nil {
-		w.WriteHeader(http.StatusBadGateway)
+		w.WriteHeader(http.StatusBadRequest)
 		return
 	}
 
