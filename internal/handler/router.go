@@ -37,6 +37,7 @@ func InitRouter(conf *config.Config) (*chi.Mux, error) {
 	middlewares := []func(http.Handler) http.Handler{
 		m.LoggingMiddleware,
 		m.GzipMiddleware,
+		m.RequestLoggerMiddleware,
 	}
 	router.Use(middlewares...)
 
