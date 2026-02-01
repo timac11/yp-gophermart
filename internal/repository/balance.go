@@ -20,9 +20,9 @@ const (
 		WHERE user_id=$1;
 	`
 	getWithdrawalsListQuery = `
-		SELECT order_num, value, created_at
+		SELECT order_num, CAST(value AS double precision) / 100.0, "withdrawal".created_at
 		FROM withdrawal
-		RIGHT JOIN "order"
+		LEFT JOIN "order"
 		ON withdrawal.order_id = "order".id
 		ORDER BY created_at DESC;
 	`
@@ -50,6 +50,7 @@ func (client *PgClient) CreateWithdraw(ctx context.Context, withdraw *model.Crea
 
 func (client *PgClient) GetWithdrawals(ctx context.Context) ([]*model.WithdrawHistory, error) {
 	rows, err := client.pool.Query(ctx, getWithdrawalsListQuery)
+
 	if err != nil {
 		return nil, err
 	}

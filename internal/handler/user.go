@@ -11,7 +11,7 @@ import (
 )
 
 func (app *Application) Login(w http.ResponseWriter, r *http.Request) {
-	user, err := app.parseUserFromBody(r)
+	user, err := parseUserFromBody(r)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -40,7 +40,7 @@ func (app *Application) Login(w http.ResponseWriter, r *http.Request) {
 }
 
 func (app *Application) Register(w http.ResponseWriter, r *http.Request) {
-	user, err := app.parseUserFromBody(r)
+	user, err := parseUserFromBody(r)
 
 	if err != nil {
 		w.WriteHeader(http.StatusBadRequest)
@@ -67,7 +67,7 @@ func (app *Application) Register(w http.ResponseWriter, r *http.Request) {
 	w.Header().Set("Authorization", signedString)
 }
 
-func (app *Application) parseUserFromBody(req *http.Request) (*model.UserLoginDto, error) {
+func parseUserFromBody(req *http.Request) (*model.UserLoginDto, error) {
 	var user model.UserLoginDto
 
 	err := json.NewDecoder(req.Body).Decode(&user)
