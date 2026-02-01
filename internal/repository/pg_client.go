@@ -24,7 +24,7 @@ func NewPgClient(url string) (*PgClient, error) {
 
 	pgClient := PgClient{pool: pool}
 
-	err = pgClient.applyMigration(context.Background())
+	err = pgClient.applyMigration()
 
 	if err != nil {
 		return nil, err
@@ -33,7 +33,7 @@ func NewPgClient(url string) (*PgClient, error) {
 	return &pgClient, nil
 }
 
-func (client *PgClient) applyMigration(ctx context.Context) error {
+func (client *PgClient) applyMigration() error {
 	sqlDb := stdlib.OpenDBFromPool(client.pool)
 	driver, err := postgres.WithInstance(sqlDb, &postgres.Config{})
 
