@@ -59,8 +59,8 @@ func (app *Application) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	w.WriteHeader(http.StatusOK)
 	w.Header().Set("Authorization", signedString)
+	w.WriteHeader(http.StatusOK)
 }
 
 func parseUserFromBody(req *http.Request) (*model.UserLoginDto, error) {
