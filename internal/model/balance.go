@@ -2,29 +2,19 @@ package model
 
 import "time"
 
-type Balance struct {
-	Id        string
-	Value     int64
-	UserId    int64
-	CreatedAt time.Time
-	UpdatedAt time.Time
-}
-
 type BalanceInfo struct {
 	Current   float64 `json:"current"`
 	Withdrawn float64 `json:"withdrawn"`
 }
 
 type WithdrawModel struct {
-	Id        string
-	OrderId   string
-	Value     int64
-	CreatedAt time.Time
-	UpdatedAt time.Time
+	Id      string
+	OrderId string
+	Value   int64
 }
 
 type CreateWithdraw struct {
-	Order float64 `json:"order"`
+	Order string  `json:"order"`
 	Sum   float64 `json:"sum"`
 }
 

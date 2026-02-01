@@ -12,11 +12,15 @@ func CheckOrderNum(number string) bool {
 	}
 
 	sum := 0
+	secondary := false
+	if len(number)%2 == 0 {
+		secondary = true
+	}
 
-	for i := len(number) - 1; i >= 0; i-- {
+	for i := 0; i < len(number); i++ {
 		digit := int(number[i] - '0')
 
-		if i%2 == 1 {
+		if (secondary && i%2 == 0) || (!secondary && i%2 == 1) {
 			digit *= 2
 			if digit > 9 {
 				digit -= 9

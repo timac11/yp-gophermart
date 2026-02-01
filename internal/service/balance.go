@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 
+	"github.com/timac11/yp-gophermart/internal/common/util"
+	"github.com/timac11/yp-gophermart/internal/errors"
 	"github.com/timac11/yp-gophermart/internal/model"
 )
 
@@ -22,6 +24,10 @@ func (service *BalanceService) GetWithdrawals(ctx context.Context) ([]*model.Wit
 }
 
 func (service *BalanceService) CreateWithdraw(ctx context.Context, withdraw *model.CreateWithdraw) (*model.WithdrawModel, error) {
+	if !util.CheckOrderNum(withdraw.Order) {
+		return nil, errors.NewInvalidOrderNumErr(withdraw.Order)
+	}
+
 	return service.repository.CreateWithdraw(ctx, withdraw)
 }
 

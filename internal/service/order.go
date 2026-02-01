@@ -3,6 +3,8 @@ package service
 import (
 	"context"
 
+	"github.com/timac11/yp-gophermart/internal/common/util"
+	"github.com/timac11/yp-gophermart/internal/errors"
 	"github.com/timac11/yp-gophermart/internal/model"
 )
 
@@ -16,8 +18,12 @@ type OrderRepository interface {
 	GetOrders(ctx context.Context) ([]*model.OrderInfo, error)
 }
 
-func (service *OrderService) CreateOrder(ctx context.Context, value string) (*model.OrderModel, error) {
-	return service.repository.CreateOrder(ctx, value)
+func (service *OrderService) CreateOrder(ctx context.Context, orderNum string) (*model.OrderModel, error) {
+	if !util.CheckOrderNum(orderNum) {
+		return nil, errors.NewInvalidOrderNumErr(orderNum)
+	}
+
+	return service.repository.CreateOrder(ctx, orderNum)
 }
 
 func (service *OrderService) GetOrders(ctx context.Context) ([]*model.OrderInfo, error) {

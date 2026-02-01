@@ -4,6 +4,7 @@ import (
 	"encoding/json"
 	"net/http"
 
+	"github.com/timac11/yp-gophermart/internal/errors"
 	"github.com/timac11/yp-gophermart/internal/logger"
 	"github.com/timac11/yp-gophermart/internal/model"
 )
@@ -43,8 +44,15 @@ func (app *Application) CreateWithdraw(w http.ResponseWriter, r *http.Request) {
 	log := logger.LoggerFromContext(r.Context())
 
 	if err != nil {
+		errorNum := http.StatusInternalServerError
+
+		if errors.IsInvalidOrderNumErr(err) {
+			errorNum = http.StatusBadRequest
+		}
+
 		log.Error(err.Error())
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+
+		http.Error(w, http.StatusText(errorNum), errorNum)
 		return
 	}
 
@@ -58,6 +66,11 @@ func (app *Application) GetWithdrawals(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error(err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	if len(withdrawals) == 0 {
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 

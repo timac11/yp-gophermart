@@ -26,12 +26,12 @@ func (e *EntityError) Unwrap() error {
 	return e.Inner
 }
 
-func IsEntityNotFoundError(err error) bool {
+func IsEntityNotFoundErr(err error) bool {
 	var entityError *EntityError
 	return _errors.As(err, &entityError) && entityError.Type == EntityNotFound
 }
 
-func IsEntityAlreadyExists(err error) bool {
+func IsEntityAlreadyExistsErr(err error) bool {
 	var entityError *EntityError
 	return _errors.As(err, &entityError) && entityError.Type == EntityNotFound
 }

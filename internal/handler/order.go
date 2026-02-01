@@ -5,7 +5,6 @@ import (
 	"io"
 	"net/http"
 
-	"github.com/timac11/yp-gophermart/internal/common/util"
 	"github.com/timac11/yp-gophermart/internal/errors"
 	"github.com/timac11/yp-gophermart/internal/logger"
 )
@@ -17,6 +16,11 @@ func (app *Application) GetOrders(w http.ResponseWriter, r *http.Request) {
 	if err != nil {
 		log.Error(err.Error())
 		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		return
+	}
+
+	if len(orders) == 0 {
+		w.WriteHeader(http.StatusNoContent)
 		return
 	}
 
@@ -35,7 +39,6 @@ func (app *Application) GetOrders(w http.ResponseWriter, r *http.Request) {
 
 func (app *Application) CreateOrder(w http.ResponseWriter, r *http.Request) {
 	defer r.Body.Close()
-	log := logger.LoggerFromContext(r.Context())
 
 	bodyBytes, err := io.ReadAll(r.Body)
 	if err != nil {
@@ -45,23 +48,36 @@ func (app *Application) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 	orderNum := string(bodyBytes)
 
-	if !util.CheckOrderNum(orderNum) {
-		http.Error(w, http.StatusText(http.StatusBadRequest), http.StatusBadRequest)
-		return
-	}
-
 	_, err = app.orderService.CreateOrder(r.Context(), orderNum)
-
 	if err != nil {
-		if errors.IsEntityAlreadyExists(err) {
+		if errors.IsEntityAlreadyExistsErr(err) {
 			w.WriteHeader(http.StatusOK)
 			return
 		}
 
-		log.Error(err.Error())
-		http.Error(w, http.StatusText(http.StatusInternalServerError), http.StatusInternalServerError)
+		handleOrderError(w, r, err)
 		return
 	}
 
 	w.WriteHeader(http.StatusAccepted)
+}
+
+func getOrderErrorStatusCode(err error) int {
+	if errors.IsInvalidOrderNumErr(err) {
+		return http.StatusBadRequest
+	} else if errors.IsInvalidOrderNumErr(err) {
+		return http.StatusUnprocessableEntity
+	}
+
+	return http.StatusInternalServerError
+}
+
+func handleOrderError(w http.ResponseWriter, r *http.Request, err error) {
+	code := getOrderErrorStatusCode(err)
+	if code == http.StatusInternalServerError {
+		log := logger.LoggerFromContext(r.Context())
+		log.Error(err.Error())
+	}
+
+	http.Error(w, http.StatusText(code), code)
 }
