@@ -48,7 +48,7 @@ func (control *JWTControl) GetSignedPayload(tokenString string) (*JWTPayload, er
 	}
 
 	if !token.Valid {
-		return nil, errors.New("Invalid token")
+		return nil, errors.New("invalid token")
 	}
 
 	payload := JWTPayload{UserID: claim.UserID}

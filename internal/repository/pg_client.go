@@ -34,10 +34,10 @@ func NewPgClient(url string) (*PgClient, error) {
 }
 
 func (client *PgClient) applyMigration() error {
-	sqlDb := stdlib.OpenDBFromPool(client.pool)
-	driver, err := postgres.WithInstance(sqlDb, &postgres.Config{})
+	sqlDB := stdlib.OpenDBFromPool(client.pool)
+	driver, err := postgres.WithInstance(sqlDB, &postgres.Config{})
 
-	defer sqlDb.Close()
+	defer sqlDB.Close()
 
 	if err != nil {
 		return err

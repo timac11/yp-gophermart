@@ -15,7 +15,7 @@ type UserService struct {
 
 type UserRepository interface {
 	CreateUser(ctx context.Context, value *model.UserLoginDto) (*model.User, error)
-	GetUserById(ctx context.Context, id string) (*model.User, error)
+	GetUserByID(ctx context.Context, id string) (*model.User, error)
 	GetUserByLogin(ctx context.Context, login string) (*model.User, error)
 }
 

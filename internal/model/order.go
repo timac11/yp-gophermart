@@ -12,9 +12,9 @@ const (
 )
 
 type OrderModel struct {
-	Id        string
+	ID        string
 	OrderNum  string
-	UserId    string
+	UserID    string
 	CreatedAt time.Time
 	UpdatedAt time.Time
 }

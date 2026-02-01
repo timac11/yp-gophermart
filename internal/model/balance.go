@@ -8,8 +8,8 @@ type BalanceInfo struct {
 }
 
 type WithdrawModel struct {
-	Id      string
-	OrderId string
+	ID      string
+	OrderID string
 	Value   int64
 }
 

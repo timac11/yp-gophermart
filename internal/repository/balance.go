@@ -39,14 +39,10 @@ const (
 )
 
 func (client *PgClient) GetBalance(ctx context.Context) (*model.BalanceInfo, error) {
-	payload, err := auth.AuthPayloadFromContext(ctx)
-
-	if err != nil {
-		return nil, err
-	}
+	payload, _ := auth.AuthPayloadFromContext(ctx)
 
 	var balanceModel model.BalanceInfo
-	err = client.pool.QueryRow(ctx, getBalanceQuery, payload.UserID).Scan(&balanceModel.Current, &balanceModel.Withdrawn)
+	err := client.pool.QueryRow(ctx, getBalanceQuery, payload.UserID).Scan(&balanceModel.Current, &balanceModel.Withdrawn)
 	if err != nil {
 		return nil, err
 	}
@@ -55,10 +51,7 @@ func (client *PgClient) GetBalance(ctx context.Context) (*model.BalanceInfo, err
 }
 
 func (client *PgClient) CreateWithdraw(ctx context.Context, withdraw *model.CreateWithdraw) (*model.WithdrawModel, error) {
-	payload, err := auth.AuthPayloadFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
+	payload, _ := auth.AuthPayloadFromContext(ctx)
 
 	tx, err := client.pool.Begin(ctx)
 	if err != nil {
@@ -72,7 +65,7 @@ func (client *PgClient) CreateWithdraw(ctx context.Context, withdraw *model.Crea
 	var orderModel model.OrderModel
 	err = tx.
 		QueryRow(ctx, createOrderQuery, withdraw.Order, payload.UserID).
-		Scan(&orderModel.Id, &orderModel.UserId, &orderModel.OrderNum, &orderModel.CreatedAt)
+		Scan(&orderModel.ID, &orderModel.UserID, &orderModel.OrderNum, &orderModel.CreatedAt)
 	if err != nil {
 		return nil, err
 	}
@@ -85,7 +78,7 @@ func (client *PgClient) CreateWithdraw(ctx context.Context, withdraw *model.Crea
 	var withdrawModel model.WithdrawModel
 	err = tx.
 		QueryRow(ctx, createWithdrawalQuery, withdraw.Order, value).
-		Scan(&withdrawModel.Id, &withdrawModel.OrderId, &withdrawModel.Value)
+		Scan(&withdrawModel.ID, &withdrawModel.OrderID, &withdrawModel.Value)
 	if err != nil {
 		return nil, err
 	}

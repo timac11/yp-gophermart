@@ -15,13 +15,13 @@ import (
 
 func InitRouter(conf *config.Config) (*chi.Mux, error) {
 	router := chi.NewRouter()
-	_, err := repository.NewPgClient(conf.DatabaseUri)
+	_, err := repository.NewPgClient(conf.DatabaseURI)
 
 	if err != nil {
 		return nil, err
 	}
 	// init application
-	repo, err := repository.NewPgClient(conf.DatabaseUri)
+	repo, err := repository.NewPgClient(conf.DatabaseURI)
 	if err != nil {
 		return nil, err
 	}

@@ -7,7 +7,7 @@ import (
 
 type Config struct {
 	Address              string `env:"RUN_ADDRESS"`
-	DatabaseUri          string `env:"DATABASE_URI"`
+	DatabaseURI          string `env:"DATABASE_URI"`
 	AccrualSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS"`
 	JWTSecret            string `env:"JWT_SECRET"`
 	JWTExpMinutes        uint   `env:"JWT_EXP_MINUTES"`
@@ -23,8 +23,8 @@ func InitConfig() *Config {
 		envValues.Address = flagValues.Address
 	}
 
-	if envValues.DatabaseUri == "" {
-		envValues.DatabaseUri = flagValues.DatabaseUri
+	if envValues.DatabaseURI == "" {
+		envValues.DatabaseURI = flagValues.DatabaseURI
 	}
 
 	if envValues.AccrualSystemAddress == "" {
@@ -62,7 +62,7 @@ func initFlags() *Config {
 	flagValues := Config{}
 
 	pflag.StringVarP(&flagValues.Address, "addr", "a", "localhost:8080", "Address host:port")
-	pflag.StringVarP(&flagValues.DatabaseUri, "dbaddr", "d", "postgresql://localhost/postgres", "PG URI")
+	pflag.StringVarP(&flagValues.DatabaseURI, "dbaddr", "d", "postgresql://localhost/postgres", "PG URI")
 	pflag.StringVarP(&flagValues.AccrualSystemAddress, "accrualaddr", "r", "http://localhost:3000", "Accrual system host:port")
 	pflag.StringVarP(&flagValues.JWTSecret, "jwtsec", "j", "DEFAULT_SECRET", "JWT Secret") // it is not right, remove default arg
 	pflag.UintVarP(&flagValues.JWTExpMinutes, "jwtexp", "s", 180, "JWT lifetime in minutes")

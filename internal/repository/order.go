@@ -32,10 +32,7 @@ const (
 )
 
 func (client *PgClient) CreateOrder(ctx context.Context, orderNum string) (*model.OrderModel, error) {
-	payload, err := auth.AuthPayloadFromContext(ctx)
-	if err != nil {
-		return nil, err
-	}
+	payload, _ := auth.AuthPayloadFromContext(ctx)
 
 	tx, err := client.pool.Begin(ctx)
 	if err != nil {
@@ -47,7 +44,7 @@ func (client *PgClient) CreateOrder(ctx context.Context, orderNum string) (*mode
 	var orderModel model.OrderModel
 	err = tx.
 		QueryRow(ctx, createOrderQuery, orderNum, payload.UserID).
-		Scan(&orderModel.Id, &orderModel.UserId, &orderModel.OrderNum, &orderModel.CreatedAt)
+		Scan(&orderModel.ID, &orderModel.UserID, &orderModel.OrderNum, &orderModel.CreatedAt)
 
 	if err != nil {
 		if pgErr, ok := err.(*pgconn.PgError); ok && pgerrcode.IsIntegrityConstraintViolation(pgErr.Code) {
@@ -56,7 +53,7 @@ func (client *PgClient) CreateOrder(ctx context.Context, orderNum string) (*mode
 		return nil, err
 	}
 
-	_, err = tx.Exec(ctx, createAccrualQuery, orderModel.Id)
+	_, err = tx.Exec(ctx, createAccrualQuery, orderModel.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -69,7 +66,8 @@ func (client *PgClient) CreateOrder(ctx context.Context, orderNum string) (*mode
 }
 
 func (client *PgClient) GetOrders(ctx context.Context) ([]*model.OrderInfo, error) {
-	payload, err := auth.AuthPayloadFromContext(ctx)
+	payload, _ := auth.AuthPayloadFromContext(ctx)
+
 	rows, err := client.pool.Query(ctx, getOrdersQuery, payload.UserID)
 	if err != nil {
 		return nil, err

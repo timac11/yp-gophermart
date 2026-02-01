@@ -12,7 +12,7 @@ func (m *Middleware) AuthCheckMiddleware(next http.Handler) http.Handler {
 		payload, error := m.jwtControl.GetSignedPayload(token)
 
 		if error != nil {
-			http.Error(w, "User unauthorized", http.StatusUnauthorized)
+			http.Error(w, http.StatusText(http.StatusUnauthorized), http.StatusUnauthorized)
 			return
 		}
 

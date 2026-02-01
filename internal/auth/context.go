@@ -16,7 +16,7 @@ func ContextWithAuthPayload(ctx context.Context, payload *JWTPayload) context.Co
 func AuthPayloadFromContext(ctx context.Context) (*JWTPayload, error) {
 	payload, ok := ctx.Value(CtxAuthKey).(*JWTPayload)
 	if !ok {
-		return nil, errors.New("User is unauthorized")
+		return nil, errors.New("user is unauthorized")
 	}
 	return payload, nil
 }

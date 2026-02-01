@@ -26,7 +26,7 @@ func (app *Application) Login(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	signedString, err := app.jwtControl.BuildJWTString(auth.JWTPayload{UserID: loginUser.Id})
+	signedString, err := app.jwtControl.BuildJWTString(auth.JWTPayload{UserID: loginUser.ID})
 
 	if err != nil {
 		handleUserError(w, r, err)
@@ -52,7 +52,7 @@ func (app *Application) Register(w http.ResponseWriter, r *http.Request) {
 		return
 	}
 
-	signedString, err := app.jwtControl.BuildJWTString(auth.JWTPayload{UserID: registeredUser.Id})
+	signedString, err := app.jwtControl.BuildJWTString(auth.JWTPayload{UserID: registeredUser.ID})
 
 	if err != nil {
 		handleUserError(w, r, err)

@@ -39,7 +39,7 @@ func (client *PgClient) CreateUser(ctx context.Context, user *model.UserLoginDto
 	}()
 
 	err = tx.QueryRow(ctx, createUserQuery, user.Login, user.Password).Scan(
-		&userModel.Id, &userModel.Login, &userModel.Password,
+		&userModel.ID, &userModel.Login, &userModel.Password,
 	)
 
 	if err != nil {
@@ -49,7 +49,7 @@ func (client *PgClient) CreateUser(ctx context.Context, user *model.UserLoginDto
 		return nil, err
 	}
 
-	_, err = tx.Exec(ctx, createBalanceQuery, 0, userModel.Id)
+	_, err = tx.Exec(ctx, createBalanceQuery, 0, userModel.ID)
 	if err != nil {
 		return nil, err
 	}
@@ -65,7 +65,7 @@ func (client *PgClient) CreateUser(ctx context.Context, user *model.UserLoginDto
 func (client *PgClient) GetUserByLogin(ctx context.Context, login string) (*model.User, error) {
 	var user model.User
 
-	err := client.pool.QueryRow(ctx, getUserByLoginQuery, login).Scan(&user.Id, &user.Login, &user.Password)
+	err := client.pool.QueryRow(ctx, getUserByLoginQuery, login).Scan(&user.ID, &user.Login, &user.Password)
 
 	if err != nil {
 		if internalErrors.Is(err, pgx.ErrNoRows) {
@@ -77,10 +77,10 @@ func (client *PgClient) GetUserByLogin(ctx context.Context, login string) (*mode
 	return &user, nil
 }
 
-func (client *PgClient) GetUserById(ctx context.Context, id string) (*model.User, error) {
+func (client *PgClient) GetUserByID(ctx context.Context, id string) (*model.User, error) {
 	var user model.User
 
-	err := client.pool.QueryRow(ctx, getUserQuery, id).Scan(&user.Id, &user.Login, &user.Password)
+	err := client.pool.QueryRow(ctx, getUserQuery, id).Scan(&user.ID, &user.Login, &user.Password)
 
 	if err != nil {
 		return nil, err
