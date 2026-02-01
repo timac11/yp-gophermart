@@ -1,11 +1,13 @@
 package model
 
+import "time"
+
 type Balance struct {
 	Id        string
 	Value     int64
 	UserId    int64
-	CreatedAt string
-	UpdatedAt string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type BalanceInfo struct {
@@ -17,8 +19,8 @@ type WithdrawModel struct {
 	Id        string
 	OrderId   string
 	Value     int64
-	CreatedAt string
-	UpdatedAt string
+	CreatedAt time.Time
+	UpdatedAt time.Time
 }
 
 type CreateWithdraw struct {

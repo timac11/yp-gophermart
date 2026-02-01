@@ -1,15 +1,20 @@
 package errors
 
-import "fmt"
+import (
+	_errors "errors"
+	"fmt"
+)
 
 const (
-	EntityNotFound      = "EntityNotFound"
-	EntityAlreadyExists = "EntityAlreadyExists"
+	EntityNotFound      EntityType = "EntityNotFound"
+	EntityAlreadyExists EntityType = "EntityAlreadyExists"
 )
+
+type EntityType string
 
 type EntityError struct {
 	Inner  error
-	Type   string
+	Type   EntityType
 	Params any
 }
 
@@ -21,7 +26,17 @@ func (e *EntityError) Unwrap() error {
 	return e.Inner
 }
 
-func NewEntityError(err error, errorType string, params any) error {
+func IsEntityNotFoundError(err error) bool {
+	var entityError *EntityError
+	return _errors.As(err, &entityError) && entityError.Type == EntityNotFound
+}
+
+func IsEntityAlreadyExists(err error) bool {
+	var entityError *EntityError
+	return _errors.As(err, &entityError) && entityError.Type == EntityNotFound
+}
+
+func NewEntityError(err error, errorType EntityType, params any) error {
 	return &EntityError{
 		Inner:  err,
 		Type:   errorType,
