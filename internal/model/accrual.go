@@ -1,16 +1,16 @@
 package model
 
-type AccrualResultStatus string
+type AccrualStatus string
 
 const (
-	AccrualRegistered AccrualResultStatus = "REGISTERED"
-	AccrualInvalid    AccrualResultStatus = "INVALID"
-	AccrualProcessing AccrualResultStatus = "PROCESSING"
-	AccrualProcessed  AccrualResultStatus = "PROCESSED"
+	AccrualRegistered AccrualStatus = "REGISTERED"
+	AccrualInvalid    AccrualStatus = "INVALID"
+	AccrualProcessing AccrualStatus = "PROCESSING"
+	AccrualProcessed  AccrualStatus = "PROCESSED"
 )
 
-type AccrualResult struct {
-	Order   string              `json:"order"`
-	Status  AccrualResultStatus `json:"status"`
-	Accrual *float64            `json:"accrual"`
+type Accrual struct {
+	Order   string        `json:"order"`
+	Status  AccrualStatus `json:"status"`
+	Accrual *float64      `json:"accrual"`
 }

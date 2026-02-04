@@ -9,17 +9,12 @@ import (
 )
 
 const (
-	timeoutClient       = 5
-	maxWorkers          = 3
-	bufSizeOrdersRecord = 3
-	limitQuery          = 10
-	timeoutLoadOrdersDB = 3
-	timeoutGetOrdersDB  = 5
+	timeoutGetOrdersDB = 5
 )
 
 type Repository interface {
-	GetOrders(ctx context.Context, lastUpdateTime *time.Time) ([]*model.OrderModel, error)
-	UpdateOrders(ctx context.Context) error
+	GetProcessingOrders(ctx context.Context, lastUpdateTime *time.Time) ([]*model.OrderModel, error)
+	UpdateAccrualStatus(ctx context.Context) error
 }
 
 type WorkerTimeoutsConfig struct {
@@ -38,7 +33,7 @@ type Agent struct {
 	accrualURL            string
 	lastOrdersFetchFromDb *time.Time
 	chOrdersForProcessing chan string
-	chOrdersResult        chan model.AccrualResult
+	chOrdersResult        chan model.Accrual
 	workersTimeoutConfig  WorkerTimeoutsConfig
 	limits                AgentLimits
 }

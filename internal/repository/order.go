@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	"time"
 
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
@@ -12,6 +13,19 @@ import (
 )
 
 const (
+	getProcessingAccruals = `
+		SELECT order_num, status from "accrual"
+		LEFT JOIN "order" ON "order".id = accrual.order_id
+		WHERE (accrual.status = 'NEW' OR accrual.status = 'PROCESSING')
+			  AND ($1 IS NULL OR accrual.created_at >= $1)
+		ORDER BY accrual.created_at
+		LIMIT $2;
+	`
+	updateAccrualStatus = `
+		UPDATE accrual
+		SET status = $1
+		WHERE order_id = (SELECT id FROM "orders" WHERE "orders".order_num = $2);
+	`
 	createOrderQuery = `
 		INSERT INTO "order" (order_num, user_id)
 		VALUES ($1, $2)
@@ -81,4 +95,31 @@ func (client *PgClient) GetOrders(ctx context.Context) ([]*model.OrderInfo, erro
 	}
 
 	return orders, nil
+}
+
+func (client *PgClient) GetProcessingAccruals(ctx context.Context, date *time.Time, limit int) ([]*model.Accrual, error) {
+	rows, err := client.pool.Query(ctx, getProcessingAccruals, date, limit)
+
+	if err != nil {
+		return nil, err
+	}
+
+	defer rows.Close()
+
+	accruals, err := pgx.CollectRows(rows, pgx.RowToAddrOfStructByPos[model.Accrual])
+	if err != nil {
+		return nil, err
+	}
+
+	return accruals, nil
+}
+
+func (client *PgClient) UpdateAccrualStatus(ctx context.Context, accrual model.Accrual) error {
+	_, err := client.pool.Exec(ctx, updateAccrualStatus, accrual.Status, accrual.Order)
+
+	if err != nil {
+		return err
+	}
+
+	return nil
 }

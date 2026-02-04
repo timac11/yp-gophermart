@@ -22,14 +22,14 @@ func NewTooManyRequestsError(retryAfter int) error {
 
 type InvalidAccrualStatusError struct {
 	Order  string
-	Status model.AccrualResultStatus
+	Status model.AccrualStatus
 }
 
 func (e *InvalidAccrualStatusError) Error() string {
 	return fmt.Sprintf("Invalid order: %v status: %v", e.Order, e.Status)
 }
 
-func NewInvalidAccrualStatusError(order string, status model.AccrualResultStatus) error {
+func NewInvalidAccrualStatusError(order string, status model.AccrualStatus) error {
 	return &InvalidAccrualStatusError{
 		Order:  order,
 		Status: status,

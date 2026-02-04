@@ -18,7 +18,7 @@ import (
 type Worker struct {
 	url                   string
 	chOrdersForProcessing chan string
-	chOrdersResult        chan model.AccrualResult
+	chOrdersResult        chan model.Accrual
 	client                *http.Client
 	retryTimeout          time.Duration
 	processingTimeout     time.Duration
@@ -27,7 +27,7 @@ type Worker struct {
 func NewWorker(
 	url string,
 	chOrdersForProcessing chan string,
-	chOrdersResult chan model.AccrualResult,
+	chOrdersResult chan model.Accrual,
 	clientTimeout time.Duration,
 	retryTimeout time.Duration,
 	processingTimeout time.Duration,
@@ -51,8 +51,8 @@ func (worker *Worker) Start(ctx context.Context) {
 	}
 }
 
-func (worker *Worker) processTask(ctx context.Context, order string) model.AccrualResult {
-	var result *model.AccrualResult
+func (worker *Worker) processTask(ctx context.Context, order string) model.Accrual {
+	var result *model.Accrual
 	var err error
 
 	retryCtx, cancel := context.WithTimeout(ctx, worker.processingTimeout)
@@ -72,10 +72,10 @@ func (worker *Worker) processTask(ctx context.Context, order string) model.Accru
 	}
 
 	// by default accrual completed with error
-	return model.AccrualResult{Order: order, Status: model.AccrualInvalid}
+	return model.Accrual{Order: order, Status: model.AccrualInvalid}
 }
 
-func (worker *Worker) executeRequest(order string) (*model.AccrualResult, error) {
+func (worker *Worker) executeRequest(order string) (*model.Accrual, error) {
 	url := fmt.Sprintf("%s%s%d", worker.url, "/api/orders/", order)
 	resp, err := worker.client.Get(url)
 
@@ -84,7 +84,7 @@ func (worker *Worker) executeRequest(order string) (*model.AccrualResult, error)
 	}
 
 	if resp.StatusCode == http.StatusOK {
-		var result model.AccrualResult
+		var result model.Accrual
 		err = json.NewDecoder(resp.Body).Decode(&result)
 
 		if err != nil {
