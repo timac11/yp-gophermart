@@ -2,13 +2,10 @@ package accrualagent
 
 import (
 	"context"
-	"fmt"
-	"net/http"
 	"time"
 
 	"github.com/timac11/yp-gophermart/internal/logger"
 	"github.com/timac11/yp-gophermart/internal/model"
-	"go.uber.org/zap"
 )
 
 const (
@@ -25,27 +22,45 @@ type Repository interface {
 	UpdateOrders(ctx context.Context) error
 }
 
-type Agent struct {
-	repository Repository
-	accrualURL string
-	// DB polling settings
-	lastOrdersFetchFromDb *time.Time
-	ordersFetchLimit      int
-	chOrdersForProcessing chan string
-	// worker settings
-
+type WorkerTimeoutsConfig struct {
+	clientTimeout     time.Duration // http client timeout per request
+	retryTimeout      time.Duration // timeout between two retries
+	processingTimeout time.Duration // timeout for whole polling task
 }
 
-func NewAgent(repository Repository, accrualURL string) *Agent {
+type AgentLimits struct {
+	workersCount int
+	ordersBuffer int
+}
+
+type Agent struct {
+	repository            Repository
+	accrualURL            string
+	lastOrdersFetchFromDb *time.Time
+	chOrdersForProcessing chan string
+	chOrdersResult        chan model.AccrualResult
+	workersTimeoutConfig  WorkerTimeoutsConfig
+	limits                AgentLimits
+}
+
+func NewAgent(
+	repository Repository,
+	accrualURL string,
+	workersTimeoutConfig WorkerTimeoutsConfig,
+	limits AgentLimits,
+) *Agent {
 	return &Agent{
-		repository: repository,
-		accrualURL: accrualURL,
-		client:     &http.Client{Timeout: time.Second * timeoutClient},
+		repository:           repository,
+		accrualURL:           accrualURL,
+		workersTimeoutConfig: workersTimeoutConfig,
+		limits:               limits,
 	}
 }
 
 func (agent *Agent) Start(ctx context.Context) {
-
+	go agent.runGetActualOrders(ctx)
+	go agent.runWorkers(ctx)
+	go agent.runUpdateAccrualStatuses(ctx)
 }
 
 func (agent *Agent) runGetActualOrders(ctx context.Context) {
@@ -55,12 +70,14 @@ func (agent *Agent) runGetActualOrders(ctx context.Context) {
 	for {
 		select {
 		case <-ticker.C:
-			orders, err := agent.repository.GetOrders(ctx, nil)
+			orders, err := agent.repository.GetOrders(ctx, agent.lastOrdersFetchFromDb)
 			if err != nil {
 				log.Error(err.Error())
 			} else {
+				now := time.Now()
+				agent.lastOrdersFetchFromDb = &now
 				for _, order := range orders {
-					agent.chOrdersForProcessing <- order
+					agent.chOrdersForProcessing <- order.OrderNum
 				}
 			}
 		case <-ctx.Done():
@@ -69,26 +86,6 @@ func (agent *Agent) runGetActualOrders(ctx context.Context) {
 	}
 }
 
-func (agent *Agent) runGetOrdersInfoFromAccrualService(ctx context.Context) {
+func (agent *Agent) runWorkers(ctx context.Context) {}
 
-}
-
-func (agent *Agent) runGetOrderInfoWorker(ctx context.Context, worker int) {
-	log := logger.LoggerFromContext(ctx)
-
-	for orderInfo := range agent.chOrdersForProcessing {
-		log.Info("start getting info", zap.String("orderNum", orderInfo.OrderNum))
-		url := fmt.Sprintf("%s%s%d", agent.accrualURL, "/api/orders/", orderInfo.OrderNum)
-		resp, err := agent.client.Get(url)
-
-		if err != nil {
-			log.Error("Get order status error: " + err.Error())
-		} else {
-			// todo: parse response to structure
-		}
-	}
-}
-
-func (agent *Agent) runUpdateOrdersStatus(ctx context.Context) {
-
-}
+func (agent *Agent) runUpdateAccrualStatuses(ctx context.Context) {}
