@@ -30,7 +30,7 @@ const (
 		RETURNING id, order_id, CAST(value AS double precision) / 100.0;
 	`
 	getBalanceQuery = `
-		SELECT value, used_value
+		SELECT CAST(value AS double precision) / 100.0, CAST(used_value AS double precision) / 100.0
 		FROM "balance"
 		WHERE user_id=$1;
 	`
