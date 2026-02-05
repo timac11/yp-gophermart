@@ -82,7 +82,7 @@ func (client *PgClient) CreateWithdraw(ctx context.Context, withdraw *model.Crea
 
 	var withdrawModel model.WithdrawModel
 	err = tx.
-		QueryRow(ctx, createWithdrawalQuery, withdraw.Order, value).
+		QueryRow(ctx, createWithdrawalQuery, orderModel.ID, value).
 		Scan(&withdrawModel.ID, &withdrawModel.OrderID, &withdrawModel.Value)
 	if err != nil {
 		return nil, err

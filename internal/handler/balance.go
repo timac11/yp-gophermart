@@ -51,7 +51,6 @@ func (app *Application) CreateWithdraw(w http.ResponseWriter, r *http.Request) {
 		}
 
 		log.Error(err.Error())
-
 		http.Error(w, http.StatusText(errorNum), errorNum)
 		return
 	}
