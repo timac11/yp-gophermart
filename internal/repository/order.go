@@ -24,6 +24,7 @@ const (
 	updateAccrualStatus = `
 		UPDATE accrual
 		SET status = $1
+		SET value = $2
 		WHERE order_id = (SELECT id FROM "orders" WHERE "orders".order_num = $2);
 	`
 	createOrderQuery = `
@@ -35,6 +36,11 @@ const (
 		INSERT INTO "accrual" (order_id, status)
 		VALUES ($1, 'NEW')
 		RETURNING id, created_at;
+	`
+	getOrderByNumQuery = `
+		SELECT id, user_id, order_num
+		FROM "orders"
+		WHERE order_num = $1
 	`
 	getOrdersQuery = `
 		SELECT order_num, status, CAST(value AS double precision) / 100.0 as value, accrual.created_at
@@ -115,8 +121,40 @@ func (client *PgClient) GetProcessingAccruals(ctx context.Context, date *time.Ti
 }
 
 func (client *PgClient) UpdateAccrualStatus(ctx context.Context, accrual model.Accrual) error {
-	_, err := client.pool.Exec(ctx, updateAccrualStatus, accrual.Status, accrual.Order)
+	tx, err := client.pool.Begin(ctx)
+	if err != nil {
+		return err
+	}
 
+	defer tx.Rollback(ctx)
+
+	_, err = tx.Exec(ctx, updateAccrualStatus, accrual.Status, accrual.Order)
+	if err != nil {
+		return err
+	}
+
+	var value *int64
+	if accrual.Accrual != nil {
+		val := int64(*accrual.Accrual * 100)
+		value = &val
+	}
+
+
+	if value != nil {
+		var order model.OrderModel
+
+		err = tx.QueryRow(ctx, getOrderByNumQuery, accrual.Order).Scan(&order.ID, &order.UserID, &order.OrderNum)
+		if err != nil {
+			return err
+		}
+
+		_, err = tx.Exec(ctx, increaseBalanceQuery, *value, order.UserID)
+		if err != nil {
+			return err
+		}
+	}
+
+	_, err = tx.Exec(ctx, updateAccrualStatus, accrual.Status, *value, accrual.Order)
 	if err != nil {
 		return err
 	}

@@ -14,9 +14,14 @@ const (
 		VALUES ($1, $2)
 		RETURNING id, user_id, created_at;
 	`
-	updateBalanceQuery = `
+	decreaseBalanceQuery = `
 		UPDATE "balance"
 		SET value = value-$1
+		WHERE user_id = $2
+	`
+	increaseBalanceQuery = `
+		UPDATE "balance"
+		SET value = value+$1
 		WHERE user_id = $2
 	`
 	createWithdrawalQuery = `
@@ -70,7 +75,7 @@ func (client *PgClient) CreateWithdraw(ctx context.Context, withdraw *model.Crea
 		return nil, err
 	}
 
-	_, err = tx.Exec(ctx, updateBalanceQuery, value, payload.UserID)
+	_, err = tx.Exec(ctx, decreaseBalanceQuery, value, payload.UserID)
 	if err != nil {
 		return nil, err
 	}
