@@ -7,6 +7,7 @@ import (
 
 	"github.com/timac11/yp-gophermart/internal/logger"
 	"github.com/timac11/yp-gophermart/internal/model"
+	"go.uber.org/zap"
 )
 
 const (
@@ -115,6 +116,10 @@ func (agent *Agent) runUpdateAccrualStatuses(ctx context.Context) {
 	log := logger.LoggerFromContext(ctx)
 
 	for orderUpdate := range agent.chOrdersResult {
+		log.Info("Update order:",
+			zap.String("orderId", orderUpdate.Order),
+			zap.String("status", string(orderUpdate.Status)),
+		)
 		err := agent.repository.UpdateAccrualStatus(ctx, orderUpdate)
 		if err != nil {
 			log.Error(err.Error())
