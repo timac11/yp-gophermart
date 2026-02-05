@@ -152,5 +152,9 @@ func (client *PgClient) UpdateAccrualStatus(ctx context.Context, accrual model.A
 		return err
 	}
 
+	if err := tx.Commit(ctx); err != nil {
+		return err
+	}
+
 	return nil
 }
