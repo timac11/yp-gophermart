@@ -88,6 +88,8 @@ func (worker *Worker) executeRequest(order string) (*model.Accrual, error) {
 	url := fmt.Sprintf("%s%s%s", worker.url, "/api/orders/", order)
 	resp, err := worker.client.Get(url)
 
+	defer resp.Body.Close()
+
 	if err != nil {
 		return nil, err
 	}
@@ -121,11 +123,7 @@ func (worker *Worker) getRetryOptions(ctx context.Context) []retry.Option {
 		retry.Attempts(0),
 		retry.RetryIf(func(err error) bool {
 			var tooManyRequests *errors.TooManyRequestsError
-			if _errors.As(err, &tooManyRequests) {
-				return true
-			}
-
-			return false
+			return _errors.As(err, &tooManyRequests)
 		}),
 		retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
 			var tooManyRequests *errors.TooManyRequestsError
