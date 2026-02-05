@@ -38,7 +38,7 @@ const (
 	getOrderByNumQuery = `
 		SELECT id, user_id, order_num
 		FROM order
-		WHERE order_num = $1
+		WHERE order_num = $1;
 	`
 	getOrdersQuery = `
 		SELECT order_num, status, CAST(value AS double precision) / 100.0 as value, accrual.created_at
