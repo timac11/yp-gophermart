@@ -88,11 +88,10 @@ func (worker *Worker) executeRequest(order string) (*model.Accrual, error) {
 	url := fmt.Sprintf("%s%s%s", worker.url, "/api/orders/", order)
 	resp, err := worker.client.Get(url)
 
-	defer resp.Body.Close()
-
 	if err != nil {
 		return nil, err
 	}
+	defer resp.Body.Close()
 
 	if resp.StatusCode == http.StatusOK {
 		var result model.Accrual
