@@ -2,6 +2,7 @@ package accrualagent
 
 import (
 	"context"
+	"sync"
 	"time"
 
 	"github.com/timac11/yp-gophermart/internal/logger"
@@ -14,7 +15,7 @@ const (
 
 type Repository interface {
 	GetProcessingOrders(ctx context.Context, lastUpdateTime *time.Time) ([]*model.OrderModel, error)
-	UpdateAccrualStatus(ctx context.Context) error
+	UpdateAccrualStatus(ctx context.Context, accrual model.Accrual) error
 }
 
 type WorkerTimeoutsConfig struct {
@@ -65,7 +66,7 @@ func (agent *Agent) runGetActualOrders(ctx context.Context) {
 	for {
 		select {
 		case <-ticker.C:
-			orders, err := agent.repository.GetOrders(ctx, agent.lastOrdersFetchFromDb)
+			orders, err := agent.repository.GetProcessingOrders(ctx, agent.lastOrdersFetchFromDb)
 			if err != nil {
 				log.Error(err.Error())
 			} else {
@@ -81,6 +82,30 @@ func (agent *Agent) runGetActualOrders(ctx context.Context) {
 	}
 }
 
-func (agent *Agent) runWorkers(ctx context.Context) {}
+func (agent *Agent) runWorkers(ctx context.Context) {
+	workersCount := agent.limits.workersCount
+	var wg sync.WaitGroup
 
-func (agent *Agent) runUpdateAccrualStatuses(ctx context.Context) {}
+	for i := 1; i <= workersCount; i++ {
+		wg.Add(1)
+
+		go func(id int) {
+			defer wg.Done()
+			worker := NewWorker(
+				agent.accrualURL,
+				agent.chOrdersForProcessing,
+				agent.chOrdersResult,
+				agent.workersTimeoutConfig,
+			)
+			worker.Start(ctx)
+		}(i)
+	}
+
+	wg.Wait()
+}
+
+func (agent *Agent) runUpdateAccrualStatuses(ctx context.Context) {
+	for orderUpdate := range agent.chOrdersResult {
+		agent.repository.UpdateAccrualStatus(ctx, orderUpdate)
+	}
+}

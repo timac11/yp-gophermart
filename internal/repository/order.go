@@ -139,7 +139,6 @@ func (client *PgClient) UpdateAccrualStatus(ctx context.Context, accrual model.A
 		value = &val
 	}
 
-
 	if value != nil {
 		var order model.OrderModel
 

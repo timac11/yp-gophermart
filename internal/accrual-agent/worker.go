@@ -28,15 +28,15 @@ func NewWorker(
 	url string,
 	chOrdersForProcessing chan string,
 	chOrdersResult chan model.Accrual,
-	clientTimeout time.Duration,
-	retryTimeout time.Duration,
-	processingTimeout time.Duration,
+	timeoutConfig WorkerTimeoutsConfig,
 ) *Worker {
 	return &Worker{
 		url:                   url,
 		chOrdersForProcessing: chOrdersForProcessing,
 		chOrdersResult:        chOrdersResult,
-		client:                &http.Client{Timeout: clientTimeout},
+		client:                &http.Client{Timeout: timeoutConfig.clientTimeout},
+		retryTimeout:          timeoutConfig.retryTimeout,
+		processingTimeout:     timeoutConfig.processingTimeout,
 	}
 }
 
