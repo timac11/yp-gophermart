@@ -10,7 +10,6 @@ import (
 
 type UserService struct {
 	repository UserRepository
-	config     *ServiceConfig
 }
 
 type UserRepository interface {
@@ -53,9 +52,8 @@ func (service *UserService) Login(ctx context.Context, value *model.UserLoginDto
 	return userModel, nil
 }
 
-func NewUserService(repository UserRepository, config *ServiceConfig) *UserService {
+func NewUserService(repository UserRepository) *UserService {
 	return &UserService{
 		repository: repository,
-		config:     config,
 	}
 }

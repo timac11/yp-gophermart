@@ -10,7 +10,6 @@ import (
 
 type OrderService struct {
 	repository OrderRepository
-	config     *ServiceConfig
 }
 
 type OrderRepository interface {
@@ -30,9 +29,8 @@ func (service *OrderService) GetOrders(ctx context.Context) ([]*model.OrderInfo,
 	return service.repository.GetOrders(ctx)
 }
 
-func NewOrderService(repository OrderRepository, config *ServiceConfig) *OrderService {
+func NewOrderService(repository OrderRepository) *OrderService {
 	return &OrderService{
 		repository: repository,
-		config:     config,
 	}
 }

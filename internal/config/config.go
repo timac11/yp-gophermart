@@ -1,6 +1,8 @@
 package config
 
 import (
+	"time"
+
 	"github.com/caarlos0/env"
 	"github.com/spf13/pflag"
 )
@@ -11,8 +13,11 @@ type Config struct {
 	AccrualSystemAddress string `env:"ACCRUAL_SYSTEM_ADDRESS"`
 	JWTSecret            string `env:"JWT_SECRET"`
 	JWTExpMinutes        uint   `env:"JWT_EXP_MINUTES"`
-	RetryAttempts        uint
-	RetryInterval        uint
+	ClientTimeout        time.Duration
+	RetryTimeout         time.Duration
+	ProcessingTimeout    time.Duration
+	WorkersCount         uint
+	OrdersBuffer         uint
 }
 
 func InitConfig() *Config {
@@ -39,13 +44,12 @@ func InitConfig() *Config {
 		envValues.JWTExpMinutes = flagValues.JWTExpMinutes
 	}
 
-	if envValues.RetryAttempts == 0 {
-		envValues.RetryAttempts = flagValues.RetryAttempts
-	}
+	envValues.ClientTimeout = time.Second * 10
+	envValues.RetryTimeout = time.Second * 5
+	envValues.ProcessingTimeout = time.Second * 30
 
-	if envValues.RetryInterval == 0 {
-		envValues.RetryInterval = flagValues.RetryInterval
-	}
+	envValues.WorkersCount = 3
+	envValues.OrdersBuffer = 10
 
 	return envValues
 }
@@ -66,9 +70,6 @@ func initFlags() *Config {
 	pflag.StringVarP(&flagValues.AccrualSystemAddress, "accrualaddr", "r", "http://localhost:3000", "Accrual system host:port")
 	pflag.StringVarP(&flagValues.JWTSecret, "jwtsec", "j", "DEFAULT_SECRET", "JWT Secret") // it is not right, remove default arg
 	pflag.UintVarP(&flagValues.JWTExpMinutes, "jwtexp", "s", 180, "JWT lifetime in minutes")
-	pflag.UintVar(&flagValues.RetryAttempts, "retryAttempt", 3, "Count of retry attempts to execute metrics operation")
-	pflag.UintVar(&flagValues.RetryInterval, "retryInterval", 2, "Interval in seconds between metric operation attempts")
-
 	pflag.Parse()
 
 	return &flagValues

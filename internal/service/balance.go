@@ -10,7 +10,6 @@ import (
 
 type BalanceService struct {
 	repository BalanceRepository
-	config     *ServiceConfig
 }
 
 type BalanceRepository interface {
@@ -35,9 +34,8 @@ func (service *BalanceService) GetBalance(ctx context.Context) (*model.BalanceIn
 	return service.repository.GetBalance(ctx)
 }
 
-func NewBalanceService(repository BalanceRepository, config *ServiceConfig) *BalanceService {
+func NewBalanceService(repository BalanceRepository) *BalanceService {
 	return &BalanceService{
 		repository: repository,
-		config:     config,
 	}
 }

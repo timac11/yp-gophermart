@@ -5,8 +5,3 @@ type Repository interface {
 	OrderRepository
 	BalanceRepository
 }
-
-type ServiceConfig struct {
-	Attempts         uint
-	AttemptsInterval uint
-}

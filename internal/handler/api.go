@@ -12,10 +12,10 @@ type Application struct {
 	jwtControl     *auth.JWTControl
 }
 
-func NewApplication(repository service.Repository, jwtControl *auth.JWTControl, config *service.ServiceConfig) *Application {
-	userService := service.NewUserService(repository, config)
-	orderService := service.NewOrderService(repository, config)
-	balanceService := service.NewBalanceService(repository, config)
+func NewApplication(repository service.Repository, jwtControl *auth.JWTControl) *Application {
+	userService := service.NewUserService(repository)
+	orderService := service.NewOrderService(repository)
+	balanceService := service.NewBalanceService(repository)
 
 	return &Application{
 		userService:    userService,
