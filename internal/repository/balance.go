@@ -16,7 +16,7 @@ const (
 	`
 	decreaseBalanceQuery = `
 		UPDATE "balance"
-		SET value = value-$1
+		SET value = value-$1, used_value = used_value+$1
 		WHERE user_id = $2
 	`
 	increaseBalanceQuery = `
