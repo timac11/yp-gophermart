@@ -10,7 +10,7 @@ type BalanceInfo struct {
 type WithdrawModel struct {
 	ID      string
 	OrderID string
-	Value   int64
+	Value   float64
 }
 
 type CreateWithdraw struct {
