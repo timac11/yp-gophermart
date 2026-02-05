@@ -37,7 +37,7 @@ const (
 	`
 	getOrderByNumQuery = `
 		SELECT id, user_id, order_num
-		FROM "orders"
+		FROM order
 		WHERE order_num = $1
 	`
 	getOrdersQuery = `

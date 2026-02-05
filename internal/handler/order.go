@@ -64,8 +64,6 @@ func (app *Application) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 func getOrderErrorStatusCode(err error) int {
 	if errors.IsInvalidOrderNumErr(err) {
-		return http.StatusBadRequest
-	} else if errors.IsInvalidOrderNumErr(err) {
 		return http.StatusUnprocessableEntity
 	}
 
