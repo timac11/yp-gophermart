@@ -40,7 +40,7 @@ func NewWorker(
 	}
 }
 
-func (worker *Worker) Start(ctx context.Context) {
+func (worker *Worker) Run(ctx context.Context) {
 	for {
 		select {
 		case order := <-worker.chOrdersForProcessing:
@@ -114,6 +114,18 @@ func (worker *Worker) executeRequest(order string) (*model.Accrual, error) {
 func (worker *Worker) getRetryOptions(ctx context.Context) []retry.Option {
 	return []retry.Option{
 		retry.Attempts(0),
+		retry.RetryIf(func(err error) bool {
+			var tooManyRequests *errors.TooManyRequestsError
+			if _errors.As(err, &tooManyRequests) {
+				return true
+			}
+
+			var notRegisteredError *errors.AccrualNotRegisteredError
+			if _errors.As(err, &notRegisteredError) {
+				return true
+			}
+			return false
+		}),
 		retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {
 			var tooManyRequests *errors.TooManyRequestsError
 			if _errors.As(err, &tooManyRequests) {

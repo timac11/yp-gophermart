@@ -46,14 +46,16 @@ func NewAgent(
 	limits AgentLimits,
 ) *Agent {
 	return &Agent{
-		repository:           repository,
-		accrualURL:           accrualURL,
-		workersTimeoutConfig: workersTimeoutConfig,
-		limits:               limits,
+		repository:            repository,
+		accrualURL:            accrualURL,
+		workersTimeoutConfig:  workersTimeoutConfig,
+		limits:                limits,
+		chOrdersForProcessing: make(chan string, limits.ordersBuffer),
+		chOrdersResult:        make(chan model.Accrual, limits.ordersBuffer),
 	}
 }
 
-func (agent *Agent) Start(ctx context.Context) {
+func (agent *Agent) Run(ctx context.Context) {
 	go agent.runGetActualOrders(ctx)
 	go agent.runWorkers(ctx)
 	go agent.runUpdateAccrualStatuses(ctx)
@@ -97,7 +99,7 @@ func (agent *Agent) runWorkers(ctx context.Context) {
 				agent.chOrdersResult,
 				agent.workersTimeoutConfig,
 			)
-			worker.Start(ctx)
+			worker.Run(ctx)
 		}(i)
 	}
 
