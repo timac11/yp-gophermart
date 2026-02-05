@@ -12,6 +12,7 @@ import (
 	"github.com/avast/retry-go/v4"
 
 	"github.com/timac11/yp-gophermart/internal/errors"
+	"github.com/timac11/yp-gophermart/internal/logger"
 	"github.com/timac11/yp-gophermart/internal/model"
 )
 
@@ -34,24 +35,32 @@ func NewWorker(
 		url:                   url,
 		chOrdersForProcessing: chOrdersForProcessing,
 		chOrdersResult:        chOrdersResult,
-		client:                &http.Client{Timeout: timeoutConfig.clientTimeout},
-		retryTimeout:          timeoutConfig.retryTimeout,
-		processingTimeout:     timeoutConfig.processingTimeout,
+		client:                &http.Client{Timeout: timeoutConfig.ClientTimeout},
+		retryTimeout:          timeoutConfig.RetryTimeout,
+		processingTimeout:     timeoutConfig.ProcessingTimeout,
 	}
 }
 
 func (worker *Worker) Run(ctx context.Context) {
+	log := logger.LoggerFromContext(ctx)
+
 	for {
 		select {
 		case order := <-worker.chOrdersForProcessing:
-			worker.chOrdersResult <- worker.processTask(ctx, order)
+			result, err := worker.processTask(ctx, order)
+			if result != nil {
+				worker.chOrdersResult <- *result
+			} else {
+				log.Error(err.Error())
+				worker.chOrdersResult <- model.Accrual{Order: order, Status: model.AccrualInvalid}
+			}
 		case <-ctx.Done():
 			return
 		}
 	}
 }
 
-func (worker *Worker) processTask(ctx context.Context, order string) model.Accrual {
+func (worker *Worker) processTask(ctx context.Context, order string) (*model.Accrual, error) {
 	var result *model.Accrual
 	var err error
 
@@ -68,15 +77,15 @@ func (worker *Worker) processTask(ctx context.Context, order string) model.Accru
 	)
 
 	if result != nil {
-		return *result
+		return result, nil
 	}
 
 	// by default accrual completed with error
-	return model.Accrual{Order: order, Status: model.AccrualInvalid}
+	return nil, err
 }
 
 func (worker *Worker) executeRequest(order string) (*model.Accrual, error) {
-	url := fmt.Sprintf("%s%s%d", worker.url, "/api/orders/", order)
+	url := fmt.Sprintf("%s%s%s", worker.url, "/api/orders/", order)
 	resp, err := worker.client.Get(url)
 
 	if err != nil {
@@ -89,10 +98,6 @@ func (worker *Worker) executeRequest(order string) (*model.Accrual, error) {
 
 		if err != nil {
 			return nil, err
-		}
-
-		if result.Status != model.AccrualProcessed || result.Status != model.AccrualInvalid {
-			return nil, errors.NewInvalidAccrualStatusError(order, result.Status)
 		}
 
 		return &result, nil
@@ -120,10 +125,6 @@ func (worker *Worker) getRetryOptions(ctx context.Context) []retry.Option {
 				return true
 			}
 
-			var notRegisteredError *errors.AccrualNotRegisteredError
-			if _errors.As(err, &notRegisteredError) {
-				return true
-			}
 			return false
 		}),
 		retry.DelayType(func(n uint, err error, config *retry.Config) time.Duration {

@@ -44,9 +44,9 @@ func InitConfig() *Config {
 		envValues.JWTExpMinutes = flagValues.JWTExpMinutes
 	}
 
-	envValues.ClientTimeout = time.Second * 10
-	envValues.RetryTimeout = time.Second * 5
-	envValues.ProcessingTimeout = time.Second * 30
+	envValues.ClientTimeout = time.Second * 2
+	envValues.RetryTimeout = time.Second * 1
+	envValues.ProcessingTimeout = time.Second * 3
 
 	envValues.WorkersCount = 3
 	envValues.OrdersBuffer = 10
@@ -65,9 +65,9 @@ func initEnv() *Config {
 func initFlags() *Config {
 	flagValues := Config{}
 
-	pflag.StringVarP(&flagValues.Address, "addr", "a", "localhost:8080", "Address host:port")
+	pflag.StringVarP(&flagValues.Address, "addr", "a", "localhost:3000", "Address host:port")
 	pflag.StringVarP(&flagValues.DatabaseURI, "dbaddr", "d", "postgresql://localhost/postgres", "PG URI")
-	pflag.StringVarP(&flagValues.AccrualSystemAddress, "accrualaddr", "r", "http://localhost:3000", "Accrual system host:port")
+	pflag.StringVarP(&flagValues.AccrualSystemAddress, "accrualaddr", "r", "http://localhost:8080", "Accrual system host:port")
 	pflag.StringVarP(&flagValues.JWTSecret, "jwtsec", "j", "DEFAULT_SECRET", "JWT Secret") // it is not right, remove default arg
 	pflag.UintVarP(&flagValues.JWTExpMinutes, "jwtexp", "s", 180, "JWT lifetime in minutes")
 	pflag.Parse()

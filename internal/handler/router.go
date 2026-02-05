@@ -9,21 +9,11 @@ import (
 	"github.com/timac11/yp-gophermart/internal/auth"
 	"github.com/timac11/yp-gophermart/internal/config"
 	"github.com/timac11/yp-gophermart/internal/handler/middleware"
-	"github.com/timac11/yp-gophermart/internal/repository"
+	"github.com/timac11/yp-gophermart/internal/service"
 )
 
-func InitRouter(conf *config.Config) (*chi.Mux, error) {
+func InitRouter(conf *config.Config, repo service.Repository) (*chi.Mux, error) {
 	router := chi.NewRouter()
-	_, err := repository.NewPgClient(conf.DatabaseURI)
-
-	if err != nil {
-		return nil, err
-	}
-	// init application
-	repo, err := repository.NewPgClient(conf.DatabaseURI)
-	if err != nil {
-		return nil, err
-	}
 
 	jwtControl := auth.JWTControl{TokenExp: (time.Duration(conf.JWTExpMinutes * uint(time.Minute))), Secret: conf.JWTSecret}
 

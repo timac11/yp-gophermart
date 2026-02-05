@@ -14,25 +14,24 @@ const (
 )
 
 type Repository interface {
-	GetProcessingOrders(ctx context.Context, lastUpdateTime *time.Time) ([]*model.OrderModel, error)
+	GetProcessingAccruals(ctx context.Context, limit int) ([]*model.Accrual, error)
 	UpdateAccrualStatus(ctx context.Context, accrual model.Accrual) error
 }
 
 type WorkerTimeoutsConfig struct {
-	clientTimeout     time.Duration // http client timeout per request
-	retryTimeout      time.Duration // timeout between two retries
-	processingTimeout time.Duration // timeout for whole polling task
+	ClientTimeout     time.Duration // http client timeout per request
+	RetryTimeout      time.Duration // timeout between two retries
+	ProcessingTimeout time.Duration // timeout for whole polling task
 }
 
 type AgentLimits struct {
-	workersCount int
-	ordersBuffer int
+	WorkersCount uint
+	OrdersBuffer uint
 }
 
 type Agent struct {
 	repository            Repository
 	accrualURL            string
-	lastOrdersFetchFromDb *time.Time
 	chOrdersForProcessing chan string
 	chOrdersResult        chan model.Accrual
 	workersTimeoutConfig  WorkerTimeoutsConfig
@@ -50,8 +49,8 @@ func NewAgent(
 		accrualURL:            accrualURL,
 		workersTimeoutConfig:  workersTimeoutConfig,
 		limits:                limits,
-		chOrdersForProcessing: make(chan string, limits.ordersBuffer),
-		chOrdersResult:        make(chan model.Accrual, limits.ordersBuffer),
+		chOrdersForProcessing: make(chan string, limits.OrdersBuffer),
+		chOrdersResult:        make(chan model.Accrual, limits.OrdersBuffer),
 	}
 }
 
@@ -62,33 +61,39 @@ func (agent *Agent) Run(ctx context.Context) {
 }
 
 func (agent *Agent) runGetActualOrders(ctx context.Context) {
+	agent.getProcessingAccruals(ctx)
+
 	ticker := time.NewTicker(timeoutGetOrdersDB * time.Second)
-	log := logger.LoggerFromContext(ctx)
 
 	for {
 		select {
 		case <-ticker.C:
-			orders, err := agent.repository.GetProcessingOrders(ctx, agent.lastOrdersFetchFromDb)
-			if err != nil {
-				log.Error(err.Error())
-			} else {
-				now := time.Now()
-				agent.lastOrdersFetchFromDb = &now
-				for _, order := range orders {
-					agent.chOrdersForProcessing <- order.OrderNum
-				}
-			}
+			agent.getProcessingAccruals(ctx)
 		case <-ctx.Done():
 			return
 		}
 	}
 }
 
+func (agent *Agent) getProcessingAccruals(ctx context.Context) {
+	log := logger.LoggerFromContext(ctx)
+
+	// initial load
+	orders, err := agent.repository.GetProcessingAccruals(ctx, int(agent.limits.OrdersBuffer))
+	if err != nil {
+		log.Error(err.Error())
+	} else {
+		for _, order := range orders {
+			agent.chOrdersForProcessing <- order.Order
+		}
+	}
+}
+
 func (agent *Agent) runWorkers(ctx context.Context) {
-	workersCount := agent.limits.workersCount
+	workersCount := agent.limits.WorkersCount
 	var wg sync.WaitGroup
 
-	for i := 1; i <= workersCount; i++ {
+	for i := 1; i <= int(workersCount); i++ {
 		wg.Add(1)
 
 		go func(id int) {
@@ -107,7 +112,12 @@ func (agent *Agent) runWorkers(ctx context.Context) {
 }
 
 func (agent *Agent) runUpdateAccrualStatuses(ctx context.Context) {
+	log := logger.LoggerFromContext(ctx)
+
 	for orderUpdate := range agent.chOrdersResult {
-		agent.repository.UpdateAccrualStatus(ctx, orderUpdate)
+		err := agent.repository.UpdateAccrualStatus(ctx, orderUpdate)
+		if err != nil {
+			log.Error(err.Error())
+		}
 	}
 }

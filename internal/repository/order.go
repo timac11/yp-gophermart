@@ -2,30 +2,28 @@ package repository
 
 import (
 	"context"
-	"time"
 
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
 	"github.com/jackc/pgx/v5/pgconn"
 	"github.com/timac11/yp-gophermart/internal/auth"
+	"github.com/timac11/yp-gophermart/internal/common/util"
 	"github.com/timac11/yp-gophermart/internal/errors"
 	"github.com/timac11/yp-gophermart/internal/model"
 )
 
 const (
 	getProcessingAccruals = `
-		SELECT order_num, status from "accrual"
+		SELECT order_num, status, value from "accrual"
 		LEFT JOIN "order" ON "order".id = accrual.order_id
 		WHERE (accrual.status = 'NEW' OR accrual.status = 'PROCESSING')
-			  AND ($1 IS NULL OR accrual.created_at >= $1)
 		ORDER BY accrual.created_at
-		LIMIT $2;
+		LIMIT $1;
 	`
 	updateAccrualStatus = `
 		UPDATE accrual
-		SET status = $1
-		SET value = $2
-		WHERE order_id = (SELECT id FROM "orders" WHERE "orders".order_num = $2);
+		SET status = $1, value = $2
+		WHERE order_id = (SELECT id FROM "order" WHERE "order".order_num = $3);
 	`
 	createOrderQuery = `
 		INSERT INTO "order" (order_num, user_id)
@@ -103,8 +101,8 @@ func (client *PgClient) GetOrders(ctx context.Context) ([]*model.OrderInfo, erro
 	return orders, nil
 }
 
-func (client *PgClient) GetProcessingAccruals(ctx context.Context, date *time.Time, limit int) ([]*model.Accrual, error) {
-	rows, err := client.pool.Query(ctx, getProcessingAccruals, date, limit)
+func (client *PgClient) GetProcessingAccruals(ctx context.Context, limit int) ([]*model.Accrual, error) {
+	rows, err := client.pool.Query(ctx, getProcessingAccruals, limit)
 
 	if err != nil {
 		return nil, err
@@ -128,11 +126,6 @@ func (client *PgClient) UpdateAccrualStatus(ctx context.Context, accrual model.A
 
 	defer tx.Rollback(ctx)
 
-	_, err = tx.Exec(ctx, updateAccrualStatus, accrual.Status, accrual.Order)
-	if err != nil {
-		return err
-	}
-
 	var value *int64
 	if accrual.Accrual != nil {
 		val := int64(*accrual.Accrual * 100)
@@ -153,7 +146,8 @@ func (client *PgClient) UpdateAccrualStatus(ctx context.Context, accrual model.A
 		}
 	}
 
-	_, err = tx.Exec(ctx, updateAccrualStatus, accrual.Status, *value, accrual.Order)
+	status := util.MapAccrualStatusToOrderStatus(accrual.Status)
+	_, err = tx.Exec(ctx, updateAccrualStatus, status, value, accrual.Order)
 	if err != nil {
 		return err
 	}
