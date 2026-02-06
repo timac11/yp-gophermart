@@ -15,7 +15,7 @@ const (
 )
 
 type Repository interface {
-	GetProcessingAccruals(ctx context.Context, limit int) ([]*model.Accrual, error)
+	GetProcessingAccruals(ctx context.Context, limit int, offset int) ([]*model.Accrual, error)
 	UpdateAccrualStatus(ctx context.Context, accrual model.Accrual) error
 }
 
@@ -37,6 +37,7 @@ type Agent struct {
 	chOrdersResult        chan model.Accrual
 	workersTimeoutConfig  WorkerTimeoutsConfig
 	limits                AgentLimits
+	alreadyProcessedCount int
 }
 
 func NewAgent(
@@ -52,6 +53,7 @@ func NewAgent(
 		limits:                limits,
 		chOrdersForProcessing: make(chan string, limits.OrdersBuffer),
 		chOrdersResult:        make(chan model.Accrual, limits.OrdersBuffer),
+		alreadyProcessedCount: 0,
 	}
 }
 
@@ -80,10 +82,11 @@ func (agent *Agent) getProcessingAccruals(ctx context.Context) {
 	log := logger.LoggerFromContext(ctx)
 
 	// initial load
-	orders, err := agent.repository.GetProcessingAccruals(ctx, int(agent.limits.OrdersBuffer))
+	orders, err := agent.repository.GetProcessingAccruals(ctx, int(agent.limits.OrdersBuffer), agent.alreadyProcessedCount)
 	if err != nil {
 		log.Error(err.Error())
 	} else {
+		agent.alreadyProcessedCount += len(orders)
 		for _, order := range orders {
 			agent.chOrdersForProcessing <- order.Order
 		}

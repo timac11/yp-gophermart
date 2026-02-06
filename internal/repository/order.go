@@ -19,7 +19,7 @@ const (
 		LEFT JOIN "order" ON "order".id = accrual.order_id
 		WHERE (accrual.status = 'NEW' OR accrual.status = 'PROCESSING')
 		ORDER BY accrual.created_at
-		LIMIT $1;
+		LIMIT $1 OFFSET $2;
 	`
 	updateAccrualStatus = `
 		UPDATE accrual
@@ -119,8 +119,8 @@ func (client *PgClient) GetOrders(ctx context.Context) ([]*model.OrderInfo, erro
 	return orders, nil
 }
 
-func (client *PgClient) GetProcessingAccruals(ctx context.Context, limit int) ([]*model.Accrual, error) {
-	rows, err := client.pool.Query(ctx, getProcessingAccruals, limit)
+func (client *PgClient) GetProcessingAccruals(ctx context.Context, limit int, offset int) ([]*model.Accrual, error) {
+	rows, err := client.pool.Query(ctx, getProcessingAccruals, limit, offset)
 
 	if err != nil {
 		return nil, err
