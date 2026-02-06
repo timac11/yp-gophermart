@@ -51,11 +51,6 @@ func (app *Application) CreateOrder(w http.ResponseWriter, r *http.Request) {
 
 	_, err = app.orderService.CreateOrder(r.Context(), orderNum)
 	if err != nil {
-		if errors.IsEntityAlreadyExistsErr(err) {
-			w.WriteHeader(http.StatusOK)
-			return
-		}
-
 		handleOrderError(w, r, err)
 		return
 	}
@@ -66,6 +61,12 @@ func (app *Application) CreateOrder(w http.ResponseWriter, r *http.Request) {
 func getOrderErrorStatusCode(err error) int {
 	if errors.IsInvalidOrderNumErr(err) {
 		return http.StatusUnprocessableEntity
+	}
+	if errors.IsOrderAlreadyProcessedErr(err) {
+		return http.StatusOK
+	}
+	if errors.IsEntityAlreadyExistsErr(err) {
+		return http.StatusConflict
 	}
 
 	return http.StatusInternalServerError

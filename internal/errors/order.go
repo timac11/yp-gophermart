@@ -23,3 +23,22 @@ func NewInvalidOrderNumErr(orderNum string) error {
 		OrderNum: orderNum,
 	}
 }
+
+type OrderAlreadyProcessedError struct {
+	OrderNum string
+}
+
+func (e *OrderAlreadyProcessedError) Error() string {
+	return fmt.Sprintf("Already processed order num: %v", e.OrderNum)
+}
+
+func IsOrderAlreadyProcessedErr(err error) bool {
+	var orderError *OrderAlreadyProcessedError
+	return _errors.As(err, &orderError)
+}
+
+func OrderAlreadyProcessedErr(orderNum string) error {
+	return &InvalidOrderNumError{
+		OrderNum: orderNum,
+	}
+}

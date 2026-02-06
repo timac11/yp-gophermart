@@ -2,6 +2,7 @@ package repository
 
 import (
 	"context"
+	_errors "errors"
 
 	"github.com/jackc/pgerrcode"
 	"github.com/jackc/pgx/v5"
@@ -48,6 +49,23 @@ const (
 		ORDER BY created_at DESC;
 	`
 )
+
+func (client *PgClient) GetOrder(ctx context.Context, orderNum string) (*model.OrderModel, error) {
+	var orderModel model.OrderModel
+
+	err := client.pool.
+		QueryRow(ctx, getOrderByNumQuery, orderNum).
+		Scan(&orderModel.ID, &orderModel.UserID, &orderModel.OrderNum)
+
+	if err != nil {
+		if _errors.Is(err, pgx.ErrNoRows) {
+			return nil, nil
+		}
+		return nil, err
+	}
+
+	return &orderModel, nil
+}
 
 func (client *PgClient) CreateOrder(ctx context.Context, orderNum string) (*model.OrderModel, error) {
 	payload, _ := auth.AuthPayloadFromContext(ctx)
