@@ -33,7 +33,7 @@ func IsEntityNotFoundErr(err error) bool {
 
 func IsEntityAlreadyExistsErr(err error) bool {
 	var entityError *EntityError
-	return _errors.As(err, &entityError) && entityError.Type == EntityNotFound
+	return _errors.As(err, &entityError) && entityError.Type == EntityAlreadyExists
 }
 
 func NewEntityError(err error, errorType EntityType, params any) error {
