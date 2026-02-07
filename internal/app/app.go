@@ -18,9 +18,8 @@ import (
 func RunApplication() {
 	conf := config.InitConfig()
 
-	g, groupCtx := errgroup.WithContext(context.Background())
-	appCtx, cancel := context.WithCancel(groupCtx)
-	defer cancel()
+	g, appCtx := errgroup.WithContext(context.Background())
+	defer appCtx.Err()
 
 	log := logger.LoggerFromContext(appCtx)
 
@@ -67,8 +66,6 @@ func RunApplication() {
 	g.Go(func() error {
 		<-quitChan
 		log.Info("graceful shutdown signal")
-
-		cancel()
 
 		if err = server.Stop(appCtx); err != nil {
 			return err
