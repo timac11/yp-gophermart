@@ -5,6 +5,8 @@ import (
 	"sync"
 	"time"
 
+	"sync/atomic"
+
 	"github.com/timac11/yp-gophermart/internal/logger"
 	"github.com/timac11/yp-gophermart/internal/model"
 	"go.uber.org/zap"
@@ -15,7 +17,7 @@ const (
 )
 
 type Repository interface {
-	GetProcessingAccruals(ctx context.Context, limit int, offset int) ([]*model.Accrual, error)
+	GetProcessingAccruals(ctx context.Context, limit uint32, offset uint32) ([]*model.Accrual, error)
 	UpdateAccrualStatus(ctx context.Context, accrual model.Accrual) error
 }
 
@@ -27,7 +29,7 @@ type WorkerTimeoutsConfig struct {
 
 type AgentLimits struct {
 	WorkersCount uint
-	OrdersBuffer uint
+	OrdersBuffer uint32
 }
 
 type Agent struct {
@@ -37,7 +39,7 @@ type Agent struct {
 	chOrdersResult        chan model.Accrual
 	workersTimeoutConfig  WorkerTimeoutsConfig
 	limits                AgentLimits
-	alreadyProcessedCount int
+	alreadyProcessedCount atomic.Uint32
 }
 
 func NewAgent(
@@ -53,7 +55,6 @@ func NewAgent(
 		limits:                limits,
 		chOrdersForProcessing: make(chan string, limits.OrdersBuffer),
 		chOrdersResult:        make(chan model.Accrual, limits.OrdersBuffer),
-		alreadyProcessedCount: 0,
 	}
 }
 
@@ -67,6 +68,8 @@ func (agent *Agent) runGetActualOrders(ctx context.Context) {
 	agent.getProcessingAccruals(ctx)
 
 	ticker := time.NewTicker(timeoutGetOrdersDB * time.Second)
+
+	defer close(agent.chOrdersForProcessing)
 
 	for {
 		select {
@@ -82,11 +85,11 @@ func (agent *Agent) getProcessingAccruals(ctx context.Context) {
 	log := logger.LoggerFromContext(ctx)
 
 	// initial load
-	orders, err := agent.repository.GetProcessingAccruals(ctx, int(agent.limits.OrdersBuffer), agent.alreadyProcessedCount)
+	orders, err := agent.repository.GetProcessingAccruals(ctx, agent.limits.OrdersBuffer, agent.alreadyProcessedCount.Load())
 	if err != nil {
 		log.Error(err.Error())
 	} else {
-		agent.alreadyProcessedCount += len(orders)
+		agent.alreadyProcessedCount.Add(uint32(len(orders)))
 		for _, order := range orders {
 			agent.chOrdersForProcessing <- order.Order
 		}
@@ -112,6 +115,7 @@ func (agent *Agent) runWorkers(ctx context.Context) {
 		}(i)
 	}
 
+	defer close(agent.chOrdersResult)
 	wg.Wait()
 }
 

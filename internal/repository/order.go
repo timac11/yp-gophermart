@@ -119,7 +119,7 @@ func (client *PgClient) GetOrders(ctx context.Context) ([]*model.OrderInfo, erro
 	return orders, nil
 }
 
-func (client *PgClient) GetProcessingAccruals(ctx context.Context, limit int, offset int) ([]*model.Accrual, error) {
+func (client *PgClient) GetProcessingAccruals(ctx context.Context, limit uint32, offset uint32) ([]*model.Accrual, error) {
 	rows, err := client.pool.Query(ctx, getProcessingAccruals, limit, offset)
 
 	if err != nil {

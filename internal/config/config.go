@@ -17,7 +17,7 @@ type Config struct {
 	RetryTimeout         time.Duration
 	ProcessingTimeout    time.Duration
 	WorkersCount         uint
-	OrdersBuffer         uint
+	OrdersBuffer         uint32
 }
 
 func InitConfig() *Config {

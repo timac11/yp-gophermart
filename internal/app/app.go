@@ -2,22 +2,32 @@ package app
 
 import (
 	"context"
-	"net/http"
+	"os"
+	"os/signal"
+	"syscall"
 
 	accrualAgent "github.com/timac11/yp-gophermart/internal/accrual-agent"
 	"github.com/timac11/yp-gophermart/internal/config"
 	"github.com/timac11/yp-gophermart/internal/handler"
+	"github.com/timac11/yp-gophermart/internal/logger"
 	"github.com/timac11/yp-gophermart/internal/repository"
+
+	"golang.org/x/sync/errgroup"
 )
 
-func RunApplication() error {
+func RunApplication() {
 	conf := config.InitConfig()
+
+	g, groupCtx := errgroup.WithContext(context.Background())
+	appCtx, cancel := context.WithCancel(groupCtx)
+	defer cancel()
+
+	log := logger.LoggerFromContext(appCtx)
 
 	// init repository
 	repo, err := repository.NewPgClient(conf.DatabaseURI)
-
 	if err != nil {
-		return err
+		log.Fatal(err.Error())
 	}
 
 	// run agent
@@ -35,19 +45,39 @@ func RunApplication() error {
 		},
 	)
 
-	go agent.Run(context.Background())
+	g.Go(func() error {
+		agent.Run(appCtx)
+		return nil
+	})
 
 	// run server
-
 	mux, err := handler.InitRouter(conf, repo)
 	if err != nil {
-		return err
+		log.Fatal(err.Error())
 	}
 
-	err = http.ListenAndServe(conf.Address, mux)
-	if err != nil {
-		return err
-	}
+	server := NewServer(conf.Address, mux)
+	g.Go(func() error {
+		return server.Start()
+	})
 
-	return nil
+	// graceful shutdown
+	quitChan := make(chan os.Signal, 1)
+	signal.Notify(quitChan, syscall.SIGINT, syscall.SIGTERM)
+	g.Go(func() error {
+		<-quitChan
+		log.Info("graceful shutdown signal")
+
+		cancel()
+
+		if err = server.Stop(appCtx); err != nil {
+			return err
+		}
+
+		return nil
+	})
+
+	if err := g.Wait(); err != nil {
+		log.Fatal(err.Error())
+	}
 }
